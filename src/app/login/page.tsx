@@ -82,7 +82,7 @@ export default function LoginPage() {
           </p>
           <div className="flex items-center gap-2 text-sm text-white/50">
             <ShieldCheck className="h-4 w-4" />
-            <span>基于卷积神经网络的病虫害识别系统 V1.0</span>
+            <span>基于多模态的生物多样性识别分析系统 V1.0</span>
           </div>
         </div>
 
