@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,14 +32,8 @@ import {
   PolarRadiusAxis,
   Radar,
 } from 'recharts';
-import { Download, TrendingUp, BarChart3 } from 'lucide-react';
-import {
-  monthlyRecordTrend,
-  speciesCategoryData,
-  raiData,
-  activityRhythmData,
-  surveyAreas,
-} from '@/lib/mock-data';
+import { Download } from 'lucide-react';
+import { api } from '@/lib/api';
 
 const protectionDistribution = [
   { level: '国家一级', count: 12, color: 'oklch(0.55 0.2 25)' },
@@ -49,7 +43,7 @@ const protectionDistribution = [
   { level: '入侵物种', count: 8, color: 'oklch(0.5 0.12 330)' },
 ];
 
-const diversityIndex = [
+const placeholderDiversityIndex = [
   { area: '凤阳山北麓', shannon: 3.2, simpson: 0.89, richness: 86 },
   { area: '百山祖南坡', shannon: 3.8, simpson: 0.92, richness: 112 },
   { area: '瓯江源头', shannon: 2.6, simpson: 0.82, richness: 64 },
@@ -58,7 +52,7 @@ const diversityIndex = [
   { area: '景宁畲族乡', shannon: 2.9, simpson: 0.85, richness: 71 },
 ];
 
-const appearanceRate = [
+const placeholderAppearanceRate = [
   { month: '1月', rate_黑麂: 15, rate_白鹇: 32, rate_猕猴: 28 },
   { month: '2月', rate_黑麂: 12, rate_白鹇: 28, rate_猕猴: 25 },
   { month: '3月', rate_黑麂: 18, rate_白鹇: 35, rate_猕猴: 30 },
@@ -71,8 +65,60 @@ const appearanceRate = [
   { month: '10月', rate_黑麂: 15, rate_白鹇: 28, rate_猕猴: 28 },
 ];
 
+// 颜色映射
+const categoryColorMap: Record<string, string> = {
+  '哺乳类': 'oklch(0.35 0.1 155)',
+  '鸟类': 'oklch(0.6 0.12 195)',
+  '爬行类': 'oklch(0.55 0.08 70)',
+  '两栖类': 'oklch(0.7 0.17 145)',
+  '鱼类': 'oklch(0.65 0.15 230)',
+  '昆虫': 'oklch(0.75 0.16 65)',
+  '植物': 'oklch(0.5 0.12 330)',
+  '真菌': 'oklch(0.6 0.1 30)',
+};
+
 export default function AnalyticsPage() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [monthlyTrend, setMonthlyTrend] = useState<any[]>([]);
+  const [speciesCategory, setSpeciesCategory] = useState<any[]>([]);
+  const [areas, setAreas] = useState<any[]>([]);
   const [areaFilter, setAreaFilter] = useState<string>('all');
+  const [schedulingStats, setSchedulingStats] = useState<any>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      try {
+        const [m, s, a, sch] = await Promise.all([
+          api.analytics.monthlyTrend(),
+          api.analytics.speciesCategory(),
+          api.surveyAreas.all().catch(() => []),
+          api.inference.schedulingStats(30).catch(() => null),
+        ]);
+        if (!cancelled) {
+          setMonthlyTrend(m || []);
+          setSpeciesCategory(s || []);
+          setAreas(a || []);
+          setSchedulingStats(sch);
+        }
+      } catch (e: any) {
+        if (!cancelled) setError(e?.message || '加载失败');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const categoryWithColor = speciesCategory.map((item: any) => ({
+    ...item,
+    color: item.color || categoryColorMap[item.name] || 'oklch(0.5 0.1 155)',
+  }));
 
   return (
     <div className="p-6 space-y-6">
@@ -90,8 +136,8 @@ export default function AnalyticsPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">全部样区</SelectItem>
-              {surveyAreas.map((area) => (
-                <SelectItem key={area.id} value={area.id}>
+              {areas.map((area) => (
+                <SelectItem key={area.id} value={String(area.id)}>
                   {area.name}
                 </SelectItem>
               ))}
@@ -104,6 +150,14 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
+      {error && (
+        <Card className="border-destructive">
+          <CardContent className="p-4 text-sm text-destructive">
+            加载失败：{error}
+          </CardContent>
+        </Card>
+      )}
+
       <Tabs defaultValue="diversity" className="space-y-4">
         <TabsList>
           <TabsTrigger value="diversity">多样性分析</TabsTrigger>
@@ -111,6 +165,7 @@ export default function AnalyticsPage() {
           <TabsTrigger value="rhythm">活动节律</TabsTrigger>
           <TabsTrigger value="appearance">出现率分析</TabsTrigger>
           <TabsTrigger value="trend">趋势分析</TabsTrigger>
+          <TabsTrigger value="scheduling">识别调度</TabsTrigger>
         </TabsList>
 
         {/* Diversity Analysis */}
@@ -121,40 +176,50 @@ export default function AnalyticsPage() {
                 <CardTitle className="text-base">物种分类组成</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center gap-4">
-                  <ResponsiveContainer width="50%" height={250}>
-                    <PieChart>
-                      <Pie
-                        data={speciesCategoryData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={55}
-                        outerRadius={85}
-                        paddingAngle={2}
-                        dataKey="value"
-                      >
-                        {speciesCategoryData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="flex-1 space-y-2">
-                    {speciesCategoryData.map((item) => (
-                      <div key={item.name} className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="h-3 w-3 rounded-sm"
-                            style={{ backgroundColor: item.color }}
-                          />
-                          <span>{item.name}</span>
-                        </div>
-                        <span className="font-medium">{item.value}</span>
-                      </div>
-                    ))}
+                {loading ? (
+                  <div className="h-[250px] flex items-center justify-center text-muted-foreground text-sm">
+                    加载中...
                   </div>
-                </div>
+                ) : categoryWithColor.length === 0 ? (
+                  <div className="h-[250px] flex items-center justify-center text-muted-foreground text-sm">
+                    暂无数据
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-4">
+                    <ResponsiveContainer width="50%" height={250}>
+                      <PieChart>
+                        <Pie
+                          data={categoryWithColor}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={55}
+                          outerRadius={85}
+                          paddingAngle={2}
+                          dataKey="value"
+                        >
+                          {categoryWithColor.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="flex-1 space-y-2">
+                      {categoryWithColor.map((item) => (
+                        <div key={item.name} className="flex items-center justify-between text-sm">
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="h-3 w-3 rounded-sm"
+                              style={{ backgroundColor: item.color }}
+                            />
+                            <span>{item.name}</span>
+                          </div>
+                          <span className="font-medium">{item.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -186,7 +251,7 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <RadarChart data={diversityIndex}>
+                <RadarChart data={placeholderDiversityIndex}>
                   <PolarGrid stroke="oklch(0.92 0.01 155)" />
                   <PolarAngleAxis dataKey="area" tick={{ fontSize: 11 }} />
                   <PolarRadiusAxis tick={{ fontSize: 10 }} />
@@ -212,21 +277,9 @@ export default function AnalyticsPage() {
               <CardTitle className="text-base">物种相对丰富度 (RAI)</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={raiData} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0.01 155)" />
-                  <XAxis type="number" tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 155)" />
-                  <YAxis
-                    type="category"
-                    dataKey="species"
-                    tick={{ fontSize: 12 }}
-                    width={80}
-                    stroke="oklch(0.5 0.02 155)"
-                  />
-                  <Tooltip />
-                  <Bar dataKey="rai" fill="oklch(0.6 0.12 195)" radius={[0, 4, 4, 0]} name="RAI" />
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="h-[400px] flex items-center justify-center text-muted-foreground text-sm">
+                该图表暂未接入 API，敬请期待
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -238,15 +291,9 @@ export default function AnalyticsPage() {
               <CardTitle className="text-base">动物活动节律分析</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <BarChart data={activityRhythmData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0.01 155)" />
-                  <XAxis dataKey="hour" tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 155)" />
-                  <YAxis tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 155)" />
-                  <Tooltip />
-                  <Bar dataKey="count" fill="oklch(0.55 0.08 70)" radius={[4, 4, 0, 0]} name="拍摄频次" />
-                </BarChart>
-              </ResponsiveContainer>
+              <div className="h-[400px] flex items-center justify-center text-muted-foreground text-sm">
+                该图表暂未接入 API，敬请期待
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -259,7 +306,7 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
-                <LineChart data={appearanceRate}>
+                <LineChart data={placeholderAppearanceRate}>
                   <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0.01 155)" />
                   <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 155)" />
                   <YAxis tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 155)" unit="%" />
@@ -302,36 +349,185 @@ export default function AnalyticsPage() {
               <CardTitle className="text-base">监测记录月度趋势</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <LineChart data={monthlyRecordTrend}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0.01 155)" />
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 155)" />
-                  <YAxis yAxisId="left" tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 155)" />
-                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 155)" />
-                  <Tooltip />
-                  <Legend />
-                  <Line
-                    yAxisId="left"
-                    type="monotone"
-                    dataKey="records"
-                    stroke="oklch(0.35 0.1 155)"
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                    name="监测记录数"
-                  />
-                  <Line
-                    yAxisId="right"
-                    type="monotone"
-                    dataKey="species"
-                    stroke="oklch(0.6 0.12 195)"
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                    name="物种数"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              {loading ? (
+                <div className="h-[400px] flex items-center justify-center text-muted-foreground text-sm">
+                  加载中...
+                </div>
+              ) : monthlyTrend.length === 0 ? (
+                <div className="h-[400px] flex items-center justify-center text-muted-foreground text-sm">
+                  暂无数据
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={400}>
+                  <LineChart data={monthlyTrend}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0.01 155)" />
+                    <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 155)" />
+                    <YAxis tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 155)" />
+                    <Tooltip />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="records"
+                      stroke="oklch(0.35 0.1 155)"
+                      strokeWidth={2}
+                      dot={{ r: 3 }}
+                      name="监测记录数"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Scheduling Analysis */}
+        <TabsContent value="scheduling" className="space-y-4">
+          {/* 调度概览卡片 */}
+          <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
+            <Card>
+              <CardContent className="p-4">
+                <p className="text-xs text-muted-foreground">边缘直判率</p>
+                <p className="text-2xl font-bold mt-1">{schedulingStats?.acceptRate ?? 0}%</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  直判 {schedulingStats?.edgeAccepted ?? 0} / 边缘任务 {schedulingStats?.edgeTasks ?? 0}
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <p className="text-xs text-muted-foreground">上云率</p>
+                <p className="text-2xl font-bold mt-1 text-amber-600">{schedulingStats?.escalationRate ?? 0}%</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  上云 {schedulingStats?.escalated ?? 0} 次
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <p className="text-xs text-muted-foreground">节省云端调用</p>
+                <p className="text-2xl font-bold mt-1 text-emerald-600">{schedulingStats?.cloudCallsSaved ?? 0}</p>
+                <p className="text-xs text-muted-foreground mt-1">次</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <p className="text-xs text-muted-foreground">边缘-云端一致率</p>
+                <p className="text-2xl font-bold mt-1">{schedulingStats?.agreementRate ?? '—'}{schedulingStats?.agreementRate != null ? '%' : ''}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  对比 {schedulingStats?.comparedTasks ?? 0} 条上云样本
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* 每日趋势折线图 */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">每日调度趋势（边缘直判 / 上云 / 云端调用）</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="h-[380px] flex items-center justify-center text-muted-foreground text-sm">加载中...</div>
+              ) : !schedulingStats?.dailyTrend?.length ? (
+                <div className="h-[380px] flex items-center justify-center text-muted-foreground text-sm">暂无调度数据</div>
+              ) : (
+                <ResponsiveContainer width="100%" height={380}>
+                  <LineChart data={schedulingStats.dailyTrend}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0.01 155)" />
+                    <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="oklch(0.5 0.02 155)" />
+                    <YAxis tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 155)" />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="edgeAccepted" stroke="oklch(0.35 0.1 155)" strokeWidth={2} dot={{ r: 2 }} name="边缘直判" />
+                    <Line type="monotone" dataKey="escalated" stroke="oklch(0.7 0.18 65)" strokeWidth={2} dot={{ r: 2 }} name="上云" />
+                    <Line type="monotone" dataKey="cloudCalls" stroke="oklch(0.55 0.2 25)" strokeWidth={2} dot={{ r: 2 }} name="云端调用" />
+                    <Line type="monotone" dataKey="saved" stroke="oklch(0.55 0.14 145)" strokeWidth={2} dot={{ r: 2 }} name="节省调用" strokeDasharray="5 3" />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* 上云原因分布 + 预算 */}
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">上云原因分布</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="h-[260px] flex items-center justify-center text-muted-foreground text-sm">加载中...</div>
+                ) : !schedulingStats?.escalationReasons?.length ? (
+                  <div className="h-[260px] flex items-center justify-center text-muted-foreground text-sm">暂无上云记录</div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={260}>
+                    <PieChart>
+                      <Pie
+                        data={schedulingStats.escalationReasons}
+                        dataKey="count"
+                        nameKey="label"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={90}
+                        label={({ label, percent }) => `${label} ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {schedulingStats.escalationReasons.map((_: any, idx: number) => (
+                          <Cell key={idx} fill={[
+                            'oklch(0.7 0.18 65)', 'oklch(0.55 0.2 25)', 'oklch(0.6 0.12 195)',
+                            'oklch(0.5 0.12 330)', 'oklch(0.55 0.14 145)', 'oklch(0.6 0.1 30)',
+                          ][idx % 6]} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">云端预算与延迟</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-muted-foreground">今日云端调用 / 上限</span>
+                    <span>{schedulingStats?.cloudBudgetUsedToday ?? 0} / {schedulingStats?.cloudBudget === 0 ? '不限' : schedulingStats?.cloudBudget}</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: schedulingStats?.cloudBudget > 0
+                          ? `${Math.min(100, (schedulingStats.cloudBudgetUsedToday / schedulingStats.cloudBudget) * 100)}%`
+                          : '0%',
+                        backgroundColor: 'oklch(0.35 0.1 155)',
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  <div className="rounded-md border p-3">
+                    <p className="text-xs text-muted-foreground">边缘平均耗时</p>
+                    <p className="text-lg font-bold mt-1">{schedulingStats?.avgEdgeLatencyMs ?? 0} ms</p>
+                  </div>
+                  <div className="rounded-md border p-3">
+                    <p className="text-xs text-muted-foreground">云端平均耗时</p>
+                    <p className="text-lg font-bold mt-1">{schedulingStats?.avgCloudLatencyMs ?? 0} ms</p>
+                  </div>
+                  <div className="rounded-md border p-3">
+                    <p className="text-xs text-muted-foreground">置信度差(云-边)</p>
+                    <p className="text-lg font-bold mt-1">{schedulingStats?.avgConfidenceDelta ?? '—'}</p>
+                  </div>
+                  <div className="rounded-md border p-3">
+                    <p className="text-xs text-muted-foreground">今日直判</p>
+                    <p className="text-lg font-bold mt-1 text-emerald-600">{schedulingStats?.todayEdgeAccepted ?? 0}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

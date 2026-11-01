@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Bell,
   AlertTriangle,
@@ -9,10 +9,9 @@ import {
   TrendingDown,
   Database,
   Check,
-  Filter,
   Settings,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -33,14 +32,27 @@ import {
   DialogTrigger,
   DialogDescription,
 } from '@/components/ui/dialog';
-import {
-  alerts,
-  alertTypeLabels,
-  alertLevelLabels,
-  type Alert,
-} from '@/lib/mock-data';
+import { SimplePagination } from '@/components/simple-pagination';
+import { toastSuccess, toastError } from '@/lib/toast';
+import { api } from '@/lib/api';
 
-const alertIcons: Record<Alert['type'], typeof Bell> = {
+const PAGE_SIZE = 10;
+
+const alertTypeLabels: Record<string, string> = {
+  device_offline: '设备离线',
+  invasive_species: '入侵物种',
+  protection_anomaly: '保护物种异常',
+  data_anomaly: '数据异常',
+  diversity_decline: '多样性下降',
+};
+
+const alertLevelLabels: Record<string, string> = {
+  info: '提示',
+  warning: '警告',
+  critical: '严重',
+};
+
+const alertIcons: Record<string, typeof Bell> = {
   device_offline: Wifi,
   invasive_species: Bug,
   protection_anomaly: AlertTriangle,
@@ -48,44 +60,92 @@ const alertIcons: Record<Alert['type'], typeof Bell> = {
   diversity_decline: TrendingDown,
 };
 
-const levelStyles = {
+const levelStyles: Record<string, { bg: string; icon: string; badge: string }> = {
   critical: {
     bg: 'bg-red-50',
-    border: 'border-red-200',
     icon: 'text-red-500',
     badge: 'bg-red-100 text-red-800',
   },
   warning: {
     bg: 'bg-amber-50',
-    border: 'border-amber-200',
     icon: 'text-amber-500',
     badge: 'bg-amber-100 text-amber-800',
   },
   info: {
     bg: 'bg-sky-50',
-    border: 'border-sky-200',
     icon: 'text-sky-500',
     badge: 'bg-sky-100 text-sky-800',
   },
 };
 
 export default function AlertsPage() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [alerts, setAlerts] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [levelFilter, setLevelFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [readFilter, setReadFilter] = useState<string>('all');
   const [configOpen, setConfigOpen] = useState(false);
+  const [page, setPage] = useState(1);
 
-  const filteredAlerts = alerts.filter((alert) => {
-    const matchLevel = levelFilter === 'all' || alert.level === levelFilter;
-    const matchType = typeFilter === 'all' || alert.type === typeFilter;
-    const matchRead =
-      readFilter === 'all' ||
-      (readFilter === 'unread' && !alert.isRead) ||
-      (readFilter === 'read' && alert.isRead);
-    return matchLevel && matchType && matchRead;
-  });
+  // 筛选变化时回到第一页
+  useEffect(() => {
+    setPage(1);
+  }, [levelFilter, typeFilter, readFilter]);
 
-  const unreadCount = alerts.filter((a) => !a.isRead).length;
+  async function load() {
+    setLoading(true);
+    setError(null);
+    try {
+      const params: Record<string, any> = { page, pageSize: PAGE_SIZE };
+      if (levelFilter !== 'all') params.level = levelFilter;
+      if (typeFilter !== 'all') params.type = typeFilter;
+      if (readFilter !== 'all') params.is_read = readFilter === 'read';
+      const [res, stats] = await Promise.all([
+        api.alerts.list(params),
+        api.alerts.stats().catch(() => null),
+      ]);
+      setAlerts(res?.list || []);
+      setTotal(res?.total || 0);
+      if (stats) setUnreadCount(stats.unreadCount ?? 0);
+    } catch (e: any) {
+      setError(e?.message || '加载失败');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    load();
+  }, [page, levelFilter, typeFilter, readFilter]);
+
+  async function handleMarkRead(id: number | string) {
+    try {
+      await api.alerts.markRead(Number(id) as number);
+      setAlerts((prev) =>
+        prev.map((a) => (String(a.id) === String(id) ? { ...a, isRead: true, is_read: true } : a))
+      );
+      setUnreadCount((c) => Math.max(0, c - 1));
+      toastSuccess('已标记为已读');
+    } catch (e) {
+      toastError('标记失败');
+    }
+  }
+
+  async function handleMarkAllRead() {
+    try {
+      await api.alerts.markAllRead();
+      setAlerts((prev) => prev.map((a) => ({ ...a, isRead: true, is_read: true })));
+      setUnreadCount(0);
+      toastSuccess('全部已标记为已读');
+    } catch (e) {
+      toastError('操作失败');
+    }
+  }
+
+  const pagedAlerts = alerts;
 
   return (
     <div className="p-6 space-y-6">
@@ -98,8 +158,14 @@ export default function AlertsPage() {
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="text-sm px-3 py-1">
-            {unreadCount} 条未读
+            {loading ? '...' : unreadCount} 条未读
           </Badge>
+          {unreadCount > 0 && (
+            <Button variant="outline" size="sm" onClick={handleMarkAllRead}>
+              <Check className="h-4 w-4 mr-2" />
+              全部已读
+            </Button>
+          )}
           <Dialog open={configOpen} onOpenChange={setConfigOpen}>
             <DialogTrigger asChild>
               <Button variant="outline">
@@ -180,6 +246,14 @@ export default function AlertsPage() {
         </div>
       </div>
 
+      {error && (
+        <Card className="border-destructive">
+          <CardContent className="p-4 text-sm text-destructive">
+            加载失败：{error}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Filters */}
       <div className="flex items-center gap-3">
         <Select value={levelFilter} onValueChange={setLevelFilter}>
@@ -219,74 +293,101 @@ export default function AlertsPage() {
       </div>
 
       {/* Alert List */}
-      <div className="space-y-3">
-        {filteredAlerts.map((alert) => {
-          const AlertIcon = alertIcons[alert.type];
-          const styles = levelStyles[alert.level];
-          return (
-            <Card
-              key={alert.id}
-              className={`border-l-4 ${
-                alert.level === 'critical'
-                  ? 'border-l-red-500'
-                  : alert.level === 'warning'
-                    ? 'border-l-amber-500'
-                    : 'border-l-sky-500'
-              } ${!alert.isRead ? 'bg-background' : 'bg-muted/30'}`}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className={`rounded-lg p-2 ${styles.bg} shrink-0`}>
-                    <AlertIcon className={`h-4 w-4 ${styles.icon}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-medium text-sm">{alert.title}</h3>
-                      <Badge className={`text-[10px] ${styles.badge}`}>
-                        {alertLevelLabels[alert.level]}
-                      </Badge>
-                      <Badge variant="outline" className="text-[10px]">
-                        {alertTypeLabels[alert.type]}
-                      </Badge>
-                      {!alert.isRead && (
-                        <Badge className="text-[10px] bg-primary text-primary-foreground">
-                          未读
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+          <Bell className="h-12 w-12 mb-3 opacity-50 animate-pulse" />
+          <p className="text-sm">加载中...</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {pagedAlerts.map((alert) => {
+            const AlertIcon = alertIcons[alert.type] || Bell;
+            const styles = levelStyles[alert.level] || levelStyles.info;
+            const isRead = alert.isRead ?? alert.is_read ?? false;
+            return (
+              <Card
+                key={alert.id}
+                className={`border-l-4 ${
+                  alert.level === 'critical'
+                    ? 'border-l-red-500'
+                    : alert.level === 'warning'
+                      ? 'border-l-amber-500'
+                      : 'border-l-sky-500'
+                } ${!isRead ? 'bg-background' : 'bg-muted/30'}`}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className={`rounded-lg p-2 ${styles.bg} shrink-0`}>
+                      <AlertIcon className={`h-4 w-4 ${styles.icon}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-medium text-sm">
+                          {alert.title || alert.message || '-'}
+                        </h3>
+                        <Badge className={`text-[10px] ${styles.badge}`}>
+                          {alertLevelLabels[alert.level] || alert.level}
                         </Badge>
+                        <Badge variant="outline" className="text-[10px]">
+                          {alertTypeLabels[alert.type] || alert.type}
+                        </Badge>
+                        {!isRead && (
+                          <Badge className="text-[10px] bg-primary text-primary-foreground">
+                            未读
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {alert.description || alert.message}
+                      </p>
+                      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                        <span>
+                          样区: {alert.surveyAreaName || alert.survey_area_name || alert.survey_area || '-'}
+                        </span>
+                        <span>
+                          {new Date(alert.createdAt || alert.created_at).toLocaleDateString('zh-CN')}{' '}
+                          {new Date(alert.createdAt || alert.created_at).toLocaleTimeString('zh-CN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="shrink-0">
+                      {!isRead && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => handleMarkRead(alert.id)}
+                        >
+                          <Check className="h-3 w-3 mr-1" />
+                          标记已读
+                        </Button>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground">{alert.description}</p>
-                    <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                      <span>样区: {alert.surveyAreaName}</span>
-                      <span>
-                        {new Date(alert.createdAt).toLocaleDateString('zh-CN')}{' '}
-                        {new Date(alert.createdAt).toLocaleTimeString('zh-CN', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </span>
-                    </div>
                   </div>
-                  <div className="shrink-0">
-                    {!alert.isRead && (
-                      <Button variant="ghost" size="sm" className="h-7 text-xs">
-                        <Check className="h-3 w-3 mr-1" />
-                        标记已读
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
-      {filteredAlerts.length === 0 && (
+      {!loading && pagedAlerts.length === 0 && (
         <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
           <Bell className="h-12 w-12 mb-3 opacity-50" />
           <p className="text-sm">暂无预警信息</p>
         </div>
       )}
+
+      {/* 分页 */}
+      <SimplePagination
+        total={total}
+        pageSize={PAGE_SIZE}
+        page={page}
+        onPageChange={setPage}
+      />
     </div>
   );
 }

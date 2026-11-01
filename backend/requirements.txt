@@ -1,0 +1,15 @@
+Django>=5.1,<5.2
+djangorestframework>=3.15,<4.0
+djangorestframework-simplejwt>=5.3,<6.0
+django-filter>=24.3,<25.0
+django-cors-headers>=4.4,<5.0
+drf-spectacular>=0.27,<1.0
+django-environ>=0.11,<1.0
+Pillow>=10.4,<11.0
+celery>=5.4,<6.0
+redis>=5.0,<6.0
+requests>=2.31,<3.0
+numpy>=1.26
+soundfile>=0.12
+# M4A/AAC 解码依赖系统安装 ffmpeg（AUDIO_VAD_BACKEND=silero 时可选安装下述包）
+# silero-vad>=5.1

@@ -34,6 +34,13 @@ storybook-static
 .ruff_cache/
 .tox/
 
+# Celery runtime
+celerybeat-schedule*
+backend/media/
+backend/inference_service/models/
+# 本地开发数据库（运行时数据，不入库）
+backend/db.sqlite3
+
 # Go tooling
 bin/
 *.test

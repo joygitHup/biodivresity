@@ -1,0 +1,16 @@
+{
+  "_note": "图像类别索引 → 系统物种映射。key 为 YOLOv8 COCO 模型类别 ID。未映射自动跳过。",
+  "0": {"chinese_name": "未知目标-人", "latin_name": "Homo sapiens", "species_id": null, "protection_level": "none"},
+  "1": {"chinese_name": "自行车", "latin_name": "Bicycle", "species_id": null},
+  "14": {"chinese_name": "白鹇", "latin_name": "Lophura nycthemera", "species_id": 15, "protection_level": "national_2"},
+  "15": {"chinese_name": "猫", "latin_name": "Cat", "species_id": null},
+  "16": {"chinese_name": "野犬/食肉目", "latin_name": "Canis", "species_id": null},
+  "17": {"chinese_name": "马", "latin_name": "Horse", "species_id": null},
+  "18": {"chinese_name": "羊", "latin_name": "Sheep", "species_id": null},
+  "19": {"chinese_name": "牛", "latin_name": "Cow", "species_id": null},
+  "20": {"chinese_name": "大象", "latin_name": "Elephant", "species_id": null},
+  "21": {"chinese_name": "熊", "latin_name": "Bear", "species_id": null},
+  "22": {"chinese_name": "斑马", "latin_name": "Zebra", "species_id": null},
+  "23": {"chinese_name": "长颈鹿", "latin_name": "Giraffe", "species_id": null},
+  "_coco_note": "完整 COCO 80 类见 https://github.com/ultralytics/ultralytics/blob/main/ultralytics/cfg/datasets/coco.yaml"
+}

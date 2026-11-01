@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Search,
   Camera,
@@ -8,7 +8,7 @@ import {
   Video,
   Image,
   Download,
-  Filter,
+  Loader2,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,45 +29,128 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  monitorRecords,
-  surveyAreas,
-  species,
-} from '@/lib/mock-data';
+import { SimplePagination } from '@/components/simple-pagination';
+import { toastSuccess, toastError } from '@/lib/toast';
+import { api } from '@/lib/api';
 
-const mediaTypeIcons = {
+const PAGE_SIZE = 10;
+
+const mediaTypeIcons: Record<string, typeof Image> = {
   image: Image,
   video: Video,
   audio: Mic,
 };
 
-const reviewStatusConfig = {
-  pending: { label: '待复核', variant: 'secondary' as const },
-  confirmed: { label: '已确认', variant: 'default' as const },
-  rejected: { label: '已否定', variant: 'destructive' as const },
-  corrected: { label: '已修正', variant: 'outline' as const },
+const reviewStatusConfig: Record<string, { label: string; variant: 'secondary' | 'default' | 'destructive' | 'outline' }> = {
+  pending: { label: '待复核', variant: 'secondary' },
+  confirmed: { label: '已确认', variant: 'default' },
+  rejected: { label: '已否定', variant: 'destructive' },
+  corrected: { label: '已修正', variant: 'outline' },
 };
 
 export default function RecordsPage() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [records, setRecords] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
+  const [areas, setAreas] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [areaFilter, setAreaFilter] = useState<string>('all');
   const [reviewFilter, setReviewFilter] = useState<string>('all');
   const [confidenceFilter, setConfidenceFilter] = useState<string>('all');
+  const [exporting, setExporting] = useState(false);
+  const [page, setPage] = useState(1);
+  // 仅农技人员与管理员可导出（F4-3）
+  const [canExport, setCanExport] = useState(false);
 
-  const filteredRecords = monitorRecords.filter((record) => {
-    const matchSearch =
-      record.speciesName.includes(searchTerm) ||
-      record.speciesLatinName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.deviceName.includes(searchTerm);
-    const matchArea = areaFilter === 'all' || record.surveyAreaId === areaFilter;
-    const matchReview = reviewFilter === 'all' || record.reviewStatus === reviewFilter;
-    const matchConfidence =
-      confidenceFilter === 'all' ||
-      (confidenceFilter === 'high' && record.confidence >= 0.8) ||
-      (confidenceFilter === 'medium' && record.confidence >= 0.6 && record.confidence < 0.8) ||
-      (confidenceFilter === 'low' && record.confidence < 0.6);
-    return matchSearch && matchArea && matchReview && matchConfidence;
-  });
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('user');
+      const role = raw ? JSON.parse(raw)?.role : null;
+      setCanExport(role === 'admin' || role === 'staff');
+    } catch {
+      setCanExport(false);
+    }
+  }, []);
+
+  // 筛选变化时回到第一页
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, areaFilter, reviewFilter, confidenceFilter]);
+
+  // 把当前界面筛选条件转换为后端查询参数
+  function buildExportParams() {
+    const params: Record<string, any> = { ordering: '-timestamp' };
+    if (searchTerm.trim()) params.search = searchTerm.trim();
+    if (areaFilter !== 'all') params.survey_area = areaFilter;
+    if (reviewFilter !== 'all') params.review_status = reviewFilter;
+    if (confidenceFilter === 'high') params.confidence__gte = 0.8;
+    if (confidenceFilter === 'medium') {
+      params.confidence__gte = 0.6;
+      params.confidence__lt = 0.8;
+    }
+    if (confidenceFilter === 'low') params.confidence__lt = 0.6;
+    return params;
+  }
+
+  // 把当前界面筛选条件转换为后端查询参数
+  function buildListParams() {
+    const params: Record<string, any> = {
+      page,
+      pageSize: PAGE_SIZE,
+      ordering: '-timestamp',
+    };
+    if (searchTerm.trim()) params.search = searchTerm.trim();
+    if (areaFilter !== 'all') params.survey_area = areaFilter;
+    if (reviewFilter !== 'all') params.review_status = reviewFilter;
+    if (confidenceFilter === 'high') params.confidence__gte = 0.8;
+    if (confidenceFilter === 'medium') {
+      params.confidence__gte = 0.6;
+      params.confidence__lt = 0.8;
+    }
+    if (confidenceFilter === 'low') params.confidence__lt = 0.6;
+    return params;
+  }
+
+  async function handleExport() {
+    setExporting(true);
+    setError(null);
+    try {
+      await api.records.export(buildExportParams());
+      toastSuccess('导出已完成', '文件已开始下载');
+    } catch (e: any) {
+      toastError('导出失败', e?.message);
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      try {
+        const [recRes, areaRes] = await Promise.all([
+          api.records.list(buildListParams()),
+          api.surveyAreas.all().catch(() => []),
+        ]);
+        if (!cancelled) {
+          setRecords(recRes?.list || []);
+          setTotal(recRes?.total || 0);
+          setAreas(areaRes || []);
+        }
+      } catch (e: any) {
+        if (!cancelled) setError(e?.message || '加载失败');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, searchTerm, areaFilter, reviewFilter, confidenceFilter]);
 
   return (
     <div className="p-6 space-y-6">
@@ -78,11 +161,25 @@ export default function RecordsPage() {
             查看和管理所有监测设备采集的物种识别记录
           </p>
         </div>
-        <Button variant="outline">
-          <Download className="h-4 w-4 mr-2" />
-          导出数据
-        </Button>
+        {canExport && (
+          <Button variant="outline" onClick={handleExport} disabled={exporting}>
+            {exporting ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4 mr-2" />
+            )}
+            {exporting ? '导出中...' : '导出数据'}
+          </Button>
+        )}
       </div>
+
+      {error && (
+        <Card className="border-destructive">
+          <CardContent className="p-4 text-sm text-destructive">
+            加载失败：{error}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Filters */}
       <div className="flex items-center gap-3 flex-wrap">
@@ -101,8 +198,8 @@ export default function RecordsPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">全部样区</SelectItem>
-            {surveyAreas.map((area) => (
-              <SelectItem key={area.id} value={area.id}>
+            {areas.map((area) => (
+              <SelectItem key={area.id} value={String(area.id)}>
                 {area.name}
               </SelectItem>
             ))}
@@ -134,86 +231,110 @@ export default function RecordsPage() {
       </div>
 
       {/* Records Table */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>时间</TableHead>
-                <TableHead>物种</TableHead>
-                <TableHead>设备</TableHead>
-                <TableHead>样区</TableHead>
-                <TableHead>行为</TableHead>
-                <TableHead>数量</TableHead>
-                <TableHead>置信度</TableHead>
-                <TableHead>复核状态</TableHead>
-                <TableHead>类型</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredRecords.map((record) => {
-                const MediaIcon = mediaTypeIcons[record.mediaType];
-                const review = reviewStatusConfig[record.reviewStatus];
-                return (
-                  <TableRow key={record.id}>
-                    <TableCell className="text-xs">
-                      {new Date(record.timestamp).toLocaleDateString('zh-CN')}
-                      <br />
-                      <span className="text-muted-foreground">
-                        {new Date(record.timestamp).toLocaleTimeString('zh-CN', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="text-sm font-medium">{record.speciesName}</p>
-                        <p className="text-[11px] text-muted-foreground italic">
-                          {record.speciesLatinName}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-xs">{record.deviceName}</TableCell>
-                    <TableCell className="text-xs">{record.surveyAreaName}</TableCell>
-                    <TableCell className="text-xs">{record.behavior}</TableCell>
-                    <TableCell className="text-center text-sm">{record.count}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          record.confidence >= 0.8
-                            ? 'default'
-                            : record.confidence >= 0.6
-                              ? 'secondary'
-                              : 'destructive'
-                        }
-                        className="text-[10px]"
-                      >
-                        {(record.confidence * 100).toFixed(0)}%
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={review.variant} className="text-[10px]">
-                        {review.label}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <MediaIcon className="h-4 w-4 text-muted-foreground" />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+          <Camera className="h-12 w-12 mb-3 opacity-50 animate-pulse" />
+          <p className="text-sm">加载中...</p>
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>时间</TableHead>
+                  <TableHead>物种</TableHead>
+                  <TableHead>设备</TableHead>
+                  <TableHead>样区</TableHead>
+                  <TableHead>行为</TableHead>
+                  <TableHead>数量</TableHead>
+                  <TableHead>置信度</TableHead>
+                  <TableHead>复核状态</TableHead>
+                  <TableHead>类型</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {records.map((record) => {
+                  const MediaIcon = mediaTypeIcons[record.mediaType || record.media_type] || Image;
+                  const review =
+                    reviewStatusConfig[record.reviewStatus ?? record.review_status] ||
+                    reviewStatusConfig.pending;
+                  const confidence = record.confidence ?? 0;
+                  return (
+                    <TableRow key={record.id}>
+                      <TableCell className="text-xs">
+                        {new Date(record.timestamp || record.created_at).toLocaleDateString('zh-CN')}
+                        <br />
+                        <span className="text-muted-foreground">
+                          {new Date(record.timestamp || record.created_at).toLocaleTimeString('zh-CN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="text-sm font-medium">
+                            {record.speciesName || record.species_name || '-'}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground italic">
+                            {record.speciesLatinName || record.species_latin_name || '-'}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {record.deviceName || record.device_name || '-'}
+                      </TableCell>
+                      <TableCell className="text-xs">
+                        {record.surveyAreaName || record.survey_area_name || '-'}
+                      </TableCell>
+                      <TableCell className="text-xs">{record.behavior || '-'}</TableCell>
+                      <TableCell className="text-center text-sm">{record.count ?? '-'}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            confidence >= 0.8
+                              ? 'default'
+                              : confidence >= 0.6
+                                ? 'secondary'
+                                : 'destructive'
+                          }
+                          className="text-[10px]"
+                        >
+                          {(confidence * 100).toFixed(0)}%
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={review.variant} className="text-[10px]">
+                          {review.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <MediaIcon className="h-4 w-4 text-muted-foreground" />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
-      {filteredRecords.length === 0 && (
+      {!loading && records.length === 0 && (
         <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
           <Camera className="h-12 w-12 mb-3 opacity-50" />
           <p className="text-sm">未找到匹配的监测记录</p>
         </div>
       )}
+
+      {/* 分页 */}
+      <SimplePagination
+        total={total}
+        pageSize={PAGE_SIZE}
+        page={page}
+        onPageChange={setPage}
+      />
     </div>
   );
 }

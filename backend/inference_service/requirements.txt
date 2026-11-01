@@ -1,0 +1,10 @@
+ultralytics>=8.2,<9.0
+torch>=2.0,<3.0
+librosa>=1.0.0
+panns-inference>=0.1.1
+demucs>=4.0.0
+pycocotools>=2.0.6
+requests>=2.31
+fastapi>=0.110
+uvicorn[standard]>=0.29
+numpy>=1.24,<3.0

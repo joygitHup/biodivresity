@@ -12,6 +12,10 @@ import {
   Bell,
   Settings,
   Leaf,
+  GitMerge,
+  Cpu,
+  ShieldCheck,
+  FlaskConical,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -33,6 +37,9 @@ const navigationItems = [
   { title: '物种档案', url: '/species', icon: Bug },
   { title: '监测记录', url: '/records', icon: ClipboardList },
   { title: 'AI识别复核', url: '/review', icon: ClipboardList },
+  { title: '证据融合', url: '/fusion', icon: GitMerge },
+  { title: '识别调度', url: '/scheduling', icon: Cpu },
+  { title: '模型训练', url: '/training', icon: FlaskConical },
 ];
 
 const analysisItems = [
@@ -42,6 +49,7 @@ const analysisItems = [
 
 const systemItems = [
   { title: '系统管理', url: '/system', icon: Settings },
+  { title: '操作日志', url: '/audit-logs', icon: ShieldCheck },
 ];
 
 export function AppSidebar() {
