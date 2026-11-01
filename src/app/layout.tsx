@@ -6,11 +6,11 @@ import { Toaster } from '@/components/ui/sonner';
 
 export const metadata: Metadata = {
   title: {
-    default: '生物多样性智慧监测平台',
-    template: '%s | 生物多样性监测',
+    default: '病虫害分析系统',
+    template: '%s | 病虫害分析',
   },
   description:
-    '天空地一体化生物多样性智慧监测平台，实现自动化数据采集、AI智能识别、动态分析与预警',
+    '天空地一体化作物病虫害分析系统，实现自动化数据采集、AI智能识别、动态分析与预警',
 };
 
 export default function RootLayout({

@@ -72,17 +72,17 @@ export default function LoginPage() {
               <Leaf className="h-7 w-7 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">生物多样性智慧监测平台</h1>
-              <p className="text-sm text-white/60">Biodiversity Intelligent Monitoring</p>
+              <h1 className="text-2xl font-bold">作物病虫害智能分析系统</h1>
+              <p className="text-sm text-white/60">Crop Pest & Disease Intelligent Analysis</p>
             </div>
           </div>
           <p className="text-white/70 leading-relaxed">
-            天空地一体化监测网络，融合红外相机、声纹识别、AI 智能分析，
-            为生物多样性保护提供全流程数字化支撑。
+            天空地一体化监测网络，融合高清影像、虫情与孢子采集、AI 智能识别，
+            为作物病虫害监测预警与绿色防控提供全流程数字化支撑。
           </p>
           <div className="flex items-center gap-2 text-sm text-white/50">
             <ShieldCheck className="h-4 w-4" />
-            <span>基于多模态的生物多样性识别分析系统 V1.0</span>
+            <span>基于多模态的作物病虫害识别分析系统 V1.0</span>
           </div>
         </div>
 
@@ -93,10 +93,10 @@ export default function LoginPage() {
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
                 <Leaf className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="font-bold">生物多样性监测平台</span>
+              <span className="font-bold">病虫害分析系统</span>
             </div>
             <CardTitle className="text-2xl">登录</CardTitle>
-            <CardDescription>请输入账号信息以访问监测平台</CardDescription>
+            <CardDescription>请输入账号信息以访问病虫害分析系统</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">

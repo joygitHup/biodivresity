@@ -71,10 +71,10 @@ export function AppSidebar() {
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-semibold text-sidebar-primary-foreground">
-              生物多样性监测
+              病虫害分析系统
             </span>
             <span className="text-[10px] text-sidebar-foreground/60">
-              Biodiversity Monitoring
+              Crop Pest Analysis
             </span>
           </div>
         </Link>
