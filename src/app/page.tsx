@@ -32,20 +32,20 @@ import { api } from '@/lib/api';
 
 // 颜色映射（中文作物名 → 颜色）
 const categoryColorMap: Record<string, string> = {
-  '番茄': 'oklch(0.55 0.2 25)',
-  '玉米': 'oklch(0.75 0.16 65)',
-  '苹果': 'oklch(0.35 0.1 155)',
-  '葡萄': 'oklch(0.5 0.12 330)',
+  '番茄': 'oklch(0.56 0.17 32)',
+  '玉米': 'oklch(0.78 0.13 85)',
+  '苹果': 'oklch(0.38 0.08 130)',
+  '葡萄': 'oklch(0.45 0.11 300)',
   '马铃薯': 'oklch(0.55 0.08 70)',
-  '柑橘': 'oklch(0.7 0.17 145)',
-  '桃': 'oklch(0.6 0.12 195)',
-  '辣椒': 'oklch(0.6 0.1 30)',
-  '樱桃': 'oklch(0.65 0.15 230)',
-  '草莓': 'oklch(0.6 0.14 350)',
-  '大豆': 'oklch(0.5 0.1 120)',
-  '南瓜': 'oklch(0.68 0.14 85)',
-  '蓝莓': 'oklch(0.45 0.12 280)',
-  '树莓': 'oklch(0.58 0.16 15)',
+  '柑橘': 'oklch(0.72 0.14 65)',
+  '桃': 'oklch(0.72 0.11 35)',
+  '辣椒': 'oklch(0.5 0.15 28)',
+  '樱桃': 'oklch(0.45 0.13 10)',
+  '草莓': 'oklch(0.6 0.14 5)',
+  '大豆': 'oklch(0.62 0.1 100)',
+  '南瓜': 'oklch(0.7 0.14 70)',
+  '蓝莓': 'oklch(0.48 0.1 270)',
+  '树莓': 'oklch(0.56 0.15 350)',
 };
 
 // 静态 label 映射
@@ -118,7 +118,7 @@ export default function DashboardPage() {
   // 对 speciesCategory 数据补上 color
   const categoryWithColor = speciesCategory.map((item: any) => ({
     ...item,
-    color: item.color || categoryColorMap[item.name] || 'oklch(0.5 0.1 155)',
+    color: item.color || categoryColorMap[item.name] || 'oklch(0.5 0.07 130)',
   }));
 
   const statCards = dashboard
@@ -239,24 +239,24 @@ export default function DashboardPage() {
                 <AreaChart data={monthlyTrend}>
                   <defs>
                     <linearGradient id="colorRecords" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="oklch(0.35 0.1 155)" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="oklch(0.35 0.1 155)" stopOpacity={0} />
+                      <stop offset="5%" stopColor="oklch(0.38 0.08 130)" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="oklch(0.38 0.08 130)" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0.01 155)" />
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 155)" />
-                  <YAxis tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 155)" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.91 0.018 95)" />
+                  <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 100)" />
+                  <YAxis tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 100)" />
                   <Tooltip
                     contentStyle={{
                       borderRadius: '8px',
-                      border: '1px solid oklch(0.92 0.01 155)',
+                      border: '1px solid oklch(0.91 0.018 95)',
                       boxShadow: '0 4px 12px oklch(0 0 0 / 0.05)',
                     }}
                   />
                   <Area
                     type="monotone"
                     dataKey="records"
-                    stroke="oklch(0.35 0.1 155)"
+                    stroke="oklch(0.38 0.08 130)"
                     strokeWidth={2}
                     fill="url(#colorRecords)"
                     name="监测记录"
@@ -329,24 +329,24 @@ export default function DashboardPage() {
           <CardContent>
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={raiData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0.01 155)" />
-                <XAxis type="number" tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 155)" />
+                <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.91 0.018 95)" />
+                <XAxis type="number" tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 100)" />
                 <YAxis
                   type="category"
                   dataKey="species"
                   tick={{ fontSize: 12 }}
                   width={80}
-                  stroke="oklch(0.5 0.02 155)"
+                  stroke="oklch(0.5 0.02 100)"
                 />
                 <Tooltip
                   contentStyle={{
                     borderRadius: '8px',
-                    border: '1px solid oklch(0.92 0.01 155)',
+                    border: '1px solid oklch(0.91 0.018 95)',
                   }}
                 />
                 <Bar
                   dataKey="rai"
-                  fill="oklch(0.6 0.12 195)"
+                  fill="oklch(0.72 0.14 75)"
                   radius={[0, 4, 4, 0]}
                   name="RAI"
                 />
@@ -363,18 +363,18 @@ export default function DashboardPage() {
           <CardContent>
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={rhythmData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0.01 155)" />
-                <XAxis dataKey="hour" tick={{ fontSize: 11 }} stroke="oklch(0.5 0.02 155)" />
-                <YAxis tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 155)" />
+                <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.91 0.018 95)" />
+                <XAxis dataKey="hour" tick={{ fontSize: 11 }} stroke="oklch(0.5 0.02 100)" />
+                <YAxis tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 100)" />
                 <Tooltip
                   contentStyle={{
                     borderRadius: '8px',
-                    border: '1px solid oklch(0.92 0.01 155)',
+                    border: '1px solid oklch(0.91 0.018 95)',
                   }}
                 />
                 <Bar
                   dataKey="count"
-                  fill="oklch(0.55 0.08 70)"
+                  fill="oklch(0.6 0.09 70)"
                   radius={[4, 4, 0, 0]}
                   name="监测频次"
                 />

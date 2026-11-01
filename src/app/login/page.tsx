@@ -57,18 +57,18 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[oklch(0.16_0.04_155)] p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-[oklch(0.18_0.03_130)] p-4 relative overflow-hidden">
       {/* 背景装饰 */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-[oklch(0.35_0.1_155/0.3)] blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-[oklch(0.45_0.12_160/0.2)] blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-[oklch(0.42_0.09_130/0.32)] blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-[oklch(0.66_0.13_75/0.2)] blur-3xl" />
       </div>
 
       <div className="w-full max-w-4xl grid md:grid-cols-2 gap-8 items-center relative z-10">
         {/* 左侧品牌区 */}
         <div className="hidden md:flex flex-col gap-6 text-white">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[oklch(0.45_0.12_155)]">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[oklch(0.42_0.09_130)]">
               <Leaf className="h-7 w-7 text-white" />
             </div>
             <div>

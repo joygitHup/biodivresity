@@ -70,7 +70,7 @@ export function AppSidebar() {
             <Leaf className="h-4.5 w-4.5 text-primary-foreground" />
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-semibold text-sidebar-primary-foreground">
+            <span className="text-sm font-semibold text-sidebar-foreground">
               病虫害分析系统
             </span>
             <span className="text-[10px] text-sidebar-foreground/60">

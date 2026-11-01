@@ -36,11 +36,11 @@ import { Download } from 'lucide-react';
 import { api } from '@/lib/api';
 
 const severityDistribution = [
-  { level: '严重', count: 8, color: 'oklch(0.55 0.2 25)' },
-  { level: '较高', count: 12, color: 'oklch(0.75 0.16 65)' },
-  { level: '中度', count: 15, color: 'oklch(0.7 0.17 145)' },
-  { level: '轻度', count: 3, color: 'oklch(0.6 0.12 195)' },
-  { level: '健康', count: 0, color: 'oklch(0.5 0.12 330)' },
+  { level: '严重', count: 8, color: 'oklch(0.56 0.17 32)' },
+  { level: '较高', count: 12, color: 'oklch(0.72 0.15 68)' },
+  { level: '中度', count: 15, color: 'oklch(0.66 0.11 105)' },
+  { level: '轻度', count: 3, color: 'oklch(0.62 0.1 135)' },
+  { level: '健康', count: 0, color: 'oklch(0.55 0.1 150)' },
 ];
 
 const placeholderAreaRisk = [
@@ -67,20 +67,20 @@ const placeholderAppearanceRate = [
 
 // 颜色映射（中文作物名 → 颜色）
 const categoryColorMap: Record<string, string> = {
-  '番茄': 'oklch(0.55 0.2 25)',
-  '玉米': 'oklch(0.75 0.16 65)',
-  '苹果': 'oklch(0.35 0.1 155)',
-  '葡萄': 'oklch(0.5 0.12 330)',
+  '番茄': 'oklch(0.56 0.17 32)',
+  '玉米': 'oklch(0.78 0.13 85)',
+  '苹果': 'oklch(0.38 0.08 130)',
+  '葡萄': 'oklch(0.45 0.11 300)',
   '马铃薯': 'oklch(0.55 0.08 70)',
-  '柑橘': 'oklch(0.7 0.17 145)',
-  '桃': 'oklch(0.6 0.12 195)',
-  '辣椒': 'oklch(0.6 0.1 30)',
-  '樱桃': 'oklch(0.65 0.15 230)',
-  '草莓': 'oklch(0.6 0.14 350)',
-  '大豆': 'oklch(0.5 0.1 120)',
-  '南瓜': 'oklch(0.68 0.14 85)',
-  '蓝莓': 'oklch(0.45 0.12 280)',
-  '树莓': 'oklch(0.58 0.16 15)',
+  '柑橘': 'oklch(0.72 0.14 65)',
+  '桃': 'oklch(0.72 0.11 35)',
+  '辣椒': 'oklch(0.5 0.15 28)',
+  '樱桃': 'oklch(0.45 0.13 10)',
+  '草莓': 'oklch(0.6 0.14 5)',
+  '大豆': 'oklch(0.62 0.1 100)',
+  '南瓜': 'oklch(0.7 0.14 70)',
+  '蓝莓': 'oklch(0.48 0.1 270)',
+  '树莓': 'oklch(0.56 0.15 350)',
 };
 
 export default function AnalyticsPage() {
@@ -123,7 +123,7 @@ export default function AnalyticsPage() {
 
   const categoryWithColor = speciesCategory.map((item: any) => ({
     ...item,
-    color: item.color || categoryColorMap[item.name] || 'oklch(0.5 0.1 155)',
+    color: item.color || categoryColorMap[item.name] || 'oklch(0.5 0.07 130)',
   }));
 
   return (
@@ -236,9 +236,9 @@ export default function AnalyticsPage() {
               <CardContent>
                 <ResponsiveContainer width="100%" height={250}>
                   <BarChart data={severityDistribution}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0.01 155)" />
-                    <XAxis dataKey="level" tick={{ fontSize: 11 }} stroke="oklch(0.5 0.02 155)" />
-                    <YAxis tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 155)" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.91 0.018 95)" />
+                    <XAxis dataKey="level" tick={{ fontSize: 11 }} stroke="oklch(0.5 0.02 100)" />
+                    <YAxis tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 100)" />
                     <Tooltip />
                     <Bar dataKey="count" name="类别数" radius={[4, 4, 0, 0]}>
                       {severityDistribution.map((entry, index) => (
@@ -258,21 +258,21 @@ export default function AnalyticsPage() {
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
                 <RadarChart data={placeholderAreaRisk}>
-                  <PolarGrid stroke="oklch(0.92 0.01 155)" />
+                  <PolarGrid stroke="oklch(0.91 0.018 95)" />
                   <PolarAngleAxis dataKey="area" tick={{ fontSize: 11 }} />
                   <PolarRadiusAxis tick={{ fontSize: 10 }} />
                   <Radar
                     name="病害强度"
                     dataKey="disease"
-                    stroke="oklch(0.35 0.1 155)"
-                    fill="oklch(0.35 0.1 155)"
+                    stroke="oklch(0.38 0.08 130)"
+                    fill="oklch(0.38 0.08 130)"
                     fillOpacity={0.3}
                   />
                   <Radar
                     name="虫害强度"
                     dataKey="pest"
-                    stroke="oklch(0.75 0.16 65)"
-                    fill="oklch(0.75 0.16 65)"
+                    stroke="oklch(0.72 0.15 68)"
+                    fill="oklch(0.72 0.15 68)"
                     fillOpacity={0.3}
                   />
                   <Legend />
@@ -320,15 +320,15 @@ export default function AnalyticsPage() {
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
                 <LineChart data={placeholderAppearanceRate}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0.01 155)" />
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 155)" />
-                  <YAxis tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 155)" unit="%" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.91 0.018 95)" />
+                  <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 100)" />
+                  <YAxis tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 100)" unit="%" />
                   <Tooltip />
                   <Legend />
                   <Line
                     type="monotone"
                     dataKey="cornLeafBlight"
-                    stroke="oklch(0.35 0.1 155)"
+                    stroke="oklch(0.38 0.08 130)"
                     strokeWidth={2}
                     dot={{ r: 3 }}
                     name="玉米北方叶枯病"
@@ -336,7 +336,7 @@ export default function AnalyticsPage() {
                   <Line
                     type="monotone"
                     dataKey="tomatoLateBlight"
-                    stroke="oklch(0.6 0.12 195)"
+                    stroke="oklch(0.72 0.14 75)"
                     strokeWidth={2}
                     dot={{ r: 3 }}
                     name="番茄晚疫病"
@@ -344,7 +344,7 @@ export default function AnalyticsPage() {
                   <Line
                     type="monotone"
                     dataKey="tomatoSpiderMite"
-                    stroke="oklch(0.55 0.08 70)"
+                    stroke="oklch(0.6 0.09 70)"
                     strokeWidth={2}
                     dot={{ r: 3 }}
                     name="番茄二点叶螨"
@@ -373,15 +373,15 @@ export default function AnalyticsPage() {
               ) : (
                 <ResponsiveContainer width="100%" height={400}>
                   <LineChart data={monthlyTrend}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0.01 155)" />
-                    <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 155)" />
-                    <YAxis tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 155)" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.91 0.018 95)" />
+                    <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 100)" />
+                    <YAxis tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 100)" />
                     <Tooltip />
                     <Legend />
                     <Line
                       type="monotone"
                       dataKey="records"
-                      stroke="oklch(0.35 0.1 155)"
+                      stroke="oklch(0.38 0.08 130)"
                       strokeWidth={2}
                       dot={{ r: 3 }}
                       name="监测记录数"
@@ -446,15 +446,15 @@ export default function AnalyticsPage() {
               ) : (
                 <ResponsiveContainer width="100%" height={380}>
                   <LineChart data={schedulingStats.dailyTrend}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0.01 155)" />
-                    <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="oklch(0.5 0.02 155)" />
-                    <YAxis tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 155)" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.91 0.018 95)" />
+                    <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="oklch(0.5 0.02 100)" />
+                    <YAxis tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 100)" />
                     <Tooltip />
                     <Legend />
-                    <Line type="monotone" dataKey="edgeAccepted" stroke="oklch(0.35 0.1 155)" strokeWidth={2} dot={{ r: 2 }} name="边缘直判" />
-                    <Line type="monotone" dataKey="escalated" stroke="oklch(0.7 0.18 65)" strokeWidth={2} dot={{ r: 2 }} name="上云" />
-                    <Line type="monotone" dataKey="cloudCalls" stroke="oklch(0.55 0.2 25)" strokeWidth={2} dot={{ r: 2 }} name="云端调用" />
-                    <Line type="monotone" dataKey="saved" stroke="oklch(0.55 0.14 145)" strokeWidth={2} dot={{ r: 2 }} name="节省调用" strokeDasharray="5 3" />
+                    <Line type="monotone" dataKey="edgeAccepted" stroke="oklch(0.38 0.08 130)" strokeWidth={2} dot={{ r: 2 }} name="边缘直判" />
+                    <Line type="monotone" dataKey="escalated" stroke="oklch(0.72 0.15 68)" strokeWidth={2} dot={{ r: 2 }} name="上云" />
+                    <Line type="monotone" dataKey="cloudCalls" stroke="oklch(0.56 0.17 32)" strokeWidth={2} dot={{ r: 2 }} name="云端调用" />
+                    <Line type="monotone" dataKey="saved" stroke="oklch(0.62 0.11 148)" strokeWidth={2} dot={{ r: 2 }} name="节省调用" strokeDasharray="5 3" />
                   </LineChart>
                 </ResponsiveContainer>
               )}
@@ -486,8 +486,8 @@ export default function AnalyticsPage() {
                       >
                         {schedulingStats.escalationReasons.map((_: any, idx: number) => (
                           <Cell key={idx} fill={[
-                            'oklch(0.7 0.18 65)', 'oklch(0.55 0.2 25)', 'oklch(0.6 0.12 195)',
-                            'oklch(0.5 0.12 330)', 'oklch(0.55 0.14 145)', 'oklch(0.6 0.1 30)',
+                            'oklch(0.72 0.15 68)', 'oklch(0.56 0.17 32)', 'oklch(0.72 0.14 75)',
+                            'oklch(0.45 0.11 300)', 'oklch(0.62 0.11 148)', 'oklch(0.5 0.15 28)',
                           ][idx % 6]} />
                         ))}
                       </Pie>
@@ -515,7 +515,7 @@ export default function AnalyticsPage() {
                         width: schedulingStats?.cloudBudget > 0
                           ? `${Math.min(100, (schedulingStats.cloudBudgetUsedToday / schedulingStats.cloudBudget) * 100)}%`
                           : '0%',
-                        backgroundColor: 'oklch(0.35 0.1 155)',
+                        backgroundColor: 'oklch(0.38 0.08 130)',
                       }}
                     />
                   </div>
