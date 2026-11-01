@@ -27,7 +27,7 @@ from .serializers import (
     TrainingSampleSerializer,
 )
 from .services import (
-    effective_threshold, needs_review, risk_priority, PROTECTED_LEVELS,
+    effective_threshold, needs_review, risk_priority, HIGH_RISK_LEVELS,
     config_bool, config_float,
 )
 from common.permissions import IsAdminOrStaff
@@ -426,7 +426,7 @@ class MonitorRecordViewSet(viewsets.ReadOnlyModelViewSet):
         pending_total = len(eligible)
         pending_protected = sum(
             1 for r in eligible
-            if r.species and r.species.protection_level in PROTECTED_LEVELS
+            if r.species and r.species.severity in HIGH_RISK_LEVELS
         )
         pending_low_conf = sum(1 for r in eligible if (r.confidence or 0) < 0.6)
 

@@ -55,12 +55,12 @@ import { api, ApiError } from '@/lib/api';
 
 const PAGE_SIZE = 6;
 
-const protectionLabels: Record<string, string> = {
-  national_1: '国家一级',
-  national_2: '国家二级',
-  provincial: '省级保护',
-  invasive: '入侵物种',
-  none: '无保护',
+const severityLabels: Record<string, string> = {
+  low: '轻度',
+  medium: '中度',
+  high: '较高',
+  critical: '严重',
+  none: '无（健康）',
 };
 
 const modalityMeta: Record<
@@ -284,7 +284,7 @@ export default function FusionPage() {
   }
 
   async function handleEdnaSubmit() {
-    if (!ednaForm.species) return setEdnaError('请选择物种');
+    if (!ednaForm.species) return setEdnaError('请选择类别');
     if (!ednaForm.survey_area) return setEdnaError('请选择监测样区');
     if (!ednaForm.sampled_at) return setEdnaError('请选择采样时间');
     const confidence = Number(ednaForm.detection_confidence);
@@ -324,7 +324,7 @@ export default function FusionPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">跨模态证据融合</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            按物种 × 样区 × 时间窗聚合图像、声学与 eDNA 证据，加权融合并识别冲突
+            按类别 × 样区 × 时间窗聚合图像、声学与 eDNA 证据，加权融合并识别冲突
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -356,7 +356,7 @@ export default function FusionPage() {
       {/* 统计卡片 */}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <StatCard title="证据簇总数" value={stats?.total ?? 0} hint="最近重建结果" icon={GitMerge} />
-        <StatCard title="待复核" value={stats?.pending ?? 0} hint={`保护物种 ${stats?.pendingProtected ?? 0}`} icon={Clock} tone="amber" />
+        <StatCard title="待复核" value={stats?.pending ?? 0} hint={`高风险 ${stats?.pendingProtected ?? 0}`} icon={Clock} tone="amber" />
         <StatCard title="多模态一致" value={stats?.multiModal ?? 0} hint="≥2 种模态交叉印证" icon={CheckCircle2} tone="emerald" />
         <StatCard title="证据冲突" value={stats?.conflict ?? 0} hint="需人工判定" icon={AlertTriangle} tone="red" />
         <StatCard
@@ -372,7 +372,7 @@ export default function FusionPage() {
         <div className="relative w-full max-w-xs">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="搜索物种或样区..."
+            placeholder="搜索类别或样区..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             className="pl-8"
@@ -445,7 +445,7 @@ export default function FusionPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>物种</TableHead>
+                  <TableHead>类别</TableHead>
                   <TableHead>样区</TableHead>
                   <TableHead>时间窗</TableHead>
                   <TableHead>模态</TableHead>
@@ -478,9 +478,9 @@ export default function FusionPage() {
                             <p className="text-sm font-medium">{c.speciesName}</p>
                             <p className="text-[11px] text-muted-foreground italic">{c.speciesLatinName}</p>
                           </div>
-                          {c.protectionLevel && c.protectionLevel !== 'none' && (
+                          {c.severityLevel && c.severityLevel !== 'none' && (
                             <Badge variant="outline" className="text-[10px] bg-amber-50 text-amber-700 border-amber-200">
-                              {protectionLabels[c.protectionLevel] || c.protectionLevel}
+                              {severityLabels[c.severityLevel] || c.severityLevel}
                             </Badge>
                           )}
                           {c.conflict_flag && (
@@ -558,8 +558,8 @@ export default function FusionPage() {
             </DialogTitle>
             <DialogDescription>
               {detail?.speciesLatinName}
-              {detail?.protectionLevel && detail.protectionLevel !== 'none'
-                ? ` · ${protectionLabels[detail.protectionLevel] || detail.protectionLevel}`
+              {detail?.severityLevel && detail.severityLevel !== 'none'
+                ? ` · ${severityLabels[detail.severityLevel] || detail.severityLevel}`
                 : ''}
             </DialogDescription>
           </DialogHeader>
@@ -796,13 +796,13 @@ export default function FusionPage() {
             )}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>物种 *</Label>
+                <Label>类别 *</Label>
                 <Select
                   value={ednaForm.species}
                   onValueChange={(v) => setEdnaForm({ ...ednaForm, species: v })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="选择物种" />
+                    <SelectValue placeholder="选择类别" />
                   </SelectTrigger>
                   <SelectContent>
                     {speciesOptions.map((s) => (

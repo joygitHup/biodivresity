@@ -52,12 +52,12 @@ import { api } from '@/lib/api';
 import { toastSuccess, toastError } from '@/lib/toast';
 import { SimplePagination } from '@/components/simple-pagination';
 
-const protectionLabels: Record<string, string> = {
-  national_1: '国家一级',
-  national_2: '国家二级',
-  provincial: '省级保护',
-  invasive: '入侵物种',
-  none: '无保护',
+const severityLabels: Record<string, string> = {
+  low: '轻度',
+  medium: '中度',
+  high: '较高',
+  critical: '严重',
+  none: '无（健康）',
 };
 
 const REVIEW_QUEUE_PAGE_SIZE = 50;
@@ -221,7 +221,7 @@ export default function ReviewPage() {
   async function handleCorrect() {
     if (!correctTarget) return;
     if (!correctSpeciesId) {
-      setError('请选择正确的物种');
+      setError('请选择正确的类别');
       return;
     }
     setBusy(true);
@@ -230,7 +230,7 @@ export default function ReviewPage() {
         correctedSpecies: Number(correctSpeciesId),
         remark,
       });
-      toastSuccess('已修正物种', correctTarget.speciesName);
+      toastSuccess('已修正类别', correctTarget.speciesName);
       setCorrectTarget(null);
       await load(true);
     } catch (e: any) {
@@ -265,8 +265,8 @@ export default function ReviewPage() {
 
   const belowThreshold =
     currentRecord && (currentRecord.confidence ?? 0) < (currentRecord.reviewThreshold ?? 0.6);
-  const isProtected = ['national_1', 'national_2', 'provincial'].includes(
-    currentRecord?.protectionLevel
+  const isHighRisk = ['high', 'critical'].includes(
+    currentRecord?.severityLevel
   );
 
   return (
@@ -318,7 +318,7 @@ export default function ReviewPage() {
         <StatCard
           label="待复核总数"
           value={stats?.pendingTotal ?? '—'}
-          hint={`保护物种 ${stats?.pendingProtected ?? 0} 条`}
+          hint={`高风险病虫害 ${stats?.pendingProtected ?? 0} 条`}
           tone="primary"
         />
         <StatCard
@@ -389,15 +389,15 @@ export default function ReviewPage() {
             </Select>
           </div>
           <div className="space-y-1.5 flex-1 min-w-[200px]">
-            <Label className="text-xs text-muted-foreground">物种搜索</Label>
+            <Label className="text-xs text-muted-foreground">类别搜索</Label>
             <Input
-              placeholder="输入物种中文名或拉丁名"
+              placeholder="输入病虫害名称或学名"
               value={speciesSearch}
               onChange={(e) => setSpeciesSearch(e.target.value)}
             />
           </div>
           <Badge variant="secondary" className="h-9 px-3">
-            优先复核：保护物种 {breakdown.protected ?? 0} · 入侵 {breakdown.invasive ?? 0}
+            优先复核：高风险 {breakdown.protected ?? 0} · 虫害 {breakdown.invasive ?? 0}
           </Badge>
         </CardContent>
       </Card>
@@ -434,8 +434,8 @@ export default function ReviewPage() {
                   const Icon = mediaIcons[record.mediaType || record.media_type] || Camera;
                   const thr = record.reviewThreshold ?? 0.6;
                   const low = (record.confidence ?? 0) < thr;
-                  const protectedSp = ['national_1', 'national_2', 'provincial'].includes(
-                    record.protectionLevel
+                  const highRisk = ['high', 'critical'].includes(
+                    record.severityLevel
                   );
                   return (
                     <div
@@ -471,7 +471,7 @@ export default function ReviewPage() {
                           <p className="text-sm font-medium truncate">
                             {record.speciesName || '-'}
                           </p>
-                          {protectedSp && (
+                          {highRisk && (
                             <Shield className="h-3 w-3 text-amber-600 shrink-0" />
                           )}
                         </div>
@@ -582,14 +582,14 @@ export default function ReviewPage() {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <p className="text-xs text-muted-foreground">AI 识别物种</p>
+                    <p className="text-xs text-muted-foreground">AI 识别类别</p>
                     <p className="text-lg font-semibold">{currentRecord?.speciesName || '-'}</p>
                     <p className="text-sm text-muted-foreground italic">
                       {currentRecord?.speciesLatinName || '-'}
                     </p>
-                    {currentRecord?.protectionLevel && currentRecord.protectionLevel !== 'none' && (
+                    {currentRecord?.severityLevel && currentRecord.severityLevel !== 'none' && (
                       <Badge className="mt-1.5 text-[10px] bg-amber-100 text-amber-800 border-amber-200">
-                        {protectionLabels[currentRecord.protectionLevel] || currentRecord.protectionLevel}
+                        {severityLabels[currentRecord.severityLevel] || currentRecord.severityLevel}
                       </Badge>
                     )}
                   </div>
@@ -610,7 +610,7 @@ export default function ReviewPage() {
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
                       阈值 {((currentRecord?.reviewThreshold ?? 0.6) * 100).toFixed(0)}%
-                      {isProtected ? '（保护物种高标准）' : '（常见物种）'}
+                      {isHighRisk ? '（高风险病虫害高标准）' : '（普通类别）'}
                     </p>
                     {belowThreshold && (
                       <div className="flex items-center gap-1 mt-1.5 text-red-600 text-xs">
@@ -642,7 +642,7 @@ export default function ReviewPage() {
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm pt-2 border-t">
                   <Info label="数量" value={currentRecord?.count ?? '-'} />
-                  <Info label="行为" value={currentRecord?.behavior || '-'} />
+                  <Info label="症状" value={currentRecord?.behavior || '-'} />
                   <Info label="样区" value={currentRecord?.surveyAreaName || '-'} />
                   <Info label="设备" value={currentRecord?.deviceName || '-'} />
                 </div>
@@ -655,7 +655,7 @@ export default function ReviewPage() {
                   <div className="grid grid-cols-2 gap-2">
                     <Button variant="outline" onClick={() => openCorrect(currentRecord)} disabled={busy}>
                       <Edit3 className="h-4 w-4 mr-2" />
-                      修正物种
+                      修正类别
                     </Button>
                     <Button variant="destructive" onClick={() => submitReview('rejected')} disabled={busy}>
                       <X className="h-4 w-4 mr-2" />
@@ -693,22 +693,22 @@ export default function ReviewPage() {
         </div>
       )}
 
-      {/* 修正物种 */}
+      {/* 修正类别 */}
       <Dialog open={!!correctTarget} onOpenChange={(o) => !o && setCorrectTarget(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>修正识别结果</DialogTitle>
             <DialogDescription>
               原 AI 结果「{correctTarget?.speciesName}」（
-              {((correctTarget?.confidence ?? 0) * 100).toFixed(0)}%），请选择正确物种
+              {((correctTarget?.confidence ?? 0) * 100).toFixed(0)}%），请选择正确类别
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>正确物种 *</Label>
+              <Label>正确类别 *</Label>
               <Select value={correctSpeciesId} onValueChange={setCorrectSpeciesId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="选择正确物种" />
+                  <SelectValue placeholder="选择正确类别" />
                 </SelectTrigger>
                 <SelectContent className="max-h-[280px]">
                   {speciesOptions

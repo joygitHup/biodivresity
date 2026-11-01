@@ -322,7 +322,7 @@ function SamplePoolTab() {
             </p>
             <p className="text-xs text-muted-foreground mt-2">
               {stats?.autoConfirmEnabled
-                ? `阈值 ≥ ${stats?.autoConfirmThreshold ?? 0.9}，保护物种跳过`
+                ? `阈值 ≥ ${stats?.autoConfirmThreshold ?? 0.9}，高风险类别跳过`
                 : '自动确认通道已关闭'}
             </p>
           </CardContent>
@@ -361,7 +361,7 @@ function SamplePoolTab() {
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 className="w-[220px] pl-8"
-                placeholder="物种 / 设备 / 样区"
+                placeholder="类别 / 设备 / 样区"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -436,7 +436,7 @@ function SamplePoolTab() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[100px]">模态</TableHead>
-                  <TableHead>标签物种</TableHead>
+                  <TableHead>标签类别</TableHead>
                   <TableHead className="w-[110px]">标签来源</TableHead>
                   <TableHead className="w-[90px]">置信度</TableHead>
                   <TableHead className="w-[140px]">质量标记</TableHead>
@@ -1022,7 +1022,7 @@ function RunDetailContent({ detail, onChange }: { detail: any; onChange: () => v
           </p>
         </div>
         <div className="rounded-lg border p-3">
-          <p className="text-xs text-muted-foreground">保护物种召回</p>
+          <p className="text-xs text-muted-foreground">高风险病虫害召回</p>
           <p className="text-lg font-semibold mt-1">{pct(metrics.protected_recall)}</p>
         </div>
       </div>
@@ -1153,7 +1153,7 @@ function ReportsTab() {
           </Button>
         </div>
         <p className="text-xs text-muted-foreground">
-          提交人不能审批自己的报告；含保护/入侵物种的模型必须人工审批通过后才能发布
+          提交人不能审批自己的报告；含高风险/虫害类别的模型必须人工审批通过后才能发布
         </p>
       </div>
 
@@ -1293,7 +1293,7 @@ function ReportDetailContent({ report, onChange }: { report: any; onChange: () =
           <p className="text-lg font-semibold mt-1">{pct(metrics.map50)}</p>
         </div>
         <div className="rounded-lg border p-3">
-          <p className="text-xs text-muted-foreground">保护物种召回</p>
+          <p className="text-xs text-muted-foreground">高风险病虫害召回</p>
           <p className="text-lg font-semibold mt-1">{pct(metrics.protected_recall)}</p>
         </div>
         <div className="rounded-lg border p-3">
@@ -1347,7 +1347,7 @@ function ReportDetailContent({ report, onChange }: { report: any; onChange: () =
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>物种</TableHead>
+                  <TableHead>类别</TableHead>
                   <TableHead className="w-[70px]">样本</TableHead>
                   <TableHead className="w-[80px]">召回</TableHead>
                   <TableHead className="w-[80px]">精确</TableHead>
@@ -1360,7 +1360,7 @@ function ReportDetailContent({ report, onChange }: { report: any; onChange: () =
                     <TableCell className="text-sm">
                       {cls.name}
                       {cls.protected && (
-                        <Badge variant="outline" className="ml-1.5 text-[10px]">保护</Badge>
+                        <Badge variant="outline" className="ml-1.5 text-[10px]">高风险</Badge>
                       )}
                     </TableCell>
                     <TableCell className="text-sm">{cls.support}</TableCell>

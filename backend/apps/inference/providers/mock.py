@@ -42,7 +42,7 @@ class MockProvider(InferenceProvider):
                 latin_name=sp.latin_name,
                 confidence=round(min(weight, 0.99), 4),
                 count=1,
-                protection_level=sp.protection_level,
+                severity=sp.severity,
             ))
 
         quality_flag = ""

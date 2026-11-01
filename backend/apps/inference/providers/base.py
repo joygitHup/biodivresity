@@ -14,7 +14,7 @@ class PredictionItem:
     confidence: float
     count: int = 1
     bbox: list | None = None
-    protection_level: str = "none"
+    severity: str = "none"
 
 
 @dataclass

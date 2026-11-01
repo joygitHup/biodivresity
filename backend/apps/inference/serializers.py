@@ -63,13 +63,13 @@ class PredictionTaskDetailSerializer(PredictionTaskListSerializer):
 
 class ThresholdAuditSerializer(serializers.ModelSerializer):
     speciesName = serializers.CharField(source="species.chinese_name", default="")
-    protectionLevel = serializers.CharField(source="species.protection_level", default="")
+    severityLevel = serializers.CharField(source="species.severity", default="")
     operatorName = serializers.CharField(source="operator.username", default="")
 
     class Meta:
         model = ThresholdAudit
         fields = [
-            "id", "species", "speciesName", "protectionLevel",
+            "id", "species", "speciesName", "severityLevel",
             "old_value", "new_value", "operator", "operatorName", "created_at",
         ]
 

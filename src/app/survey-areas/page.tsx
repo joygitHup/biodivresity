@@ -498,7 +498,7 @@ export default function SurveyAreasPage() {
                       </span>
                       <span className="flex items-center gap-1">
                         <TreePine className="h-3 w-3" />
-                        {area.species_count ?? 0} 物种
+                        {area.species_count ?? 0} 类别
                       </span>
                     </div>
                     <div className="flex items-center gap-1">

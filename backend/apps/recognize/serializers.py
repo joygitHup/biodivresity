@@ -24,6 +24,13 @@ class RecognizeResponseSerializer(serializers.Serializer):
 
 
 class RecognizeRecordListSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
+    def get_image_url(self, obj):
+        if obj.image:
+            return obj.image.url
+        return obj.image_url
+
     class Meta:
         model = RecognizeRecord
         fields = [

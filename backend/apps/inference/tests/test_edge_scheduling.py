@@ -42,7 +42,7 @@ class StaticProvider:
 def make_result(species: Species, confidence: float, second: float | None = None,
                 quality_flag: str = "", provider: str = "static") -> PredictResult:
     items = [PredictionItem(species.id, species.chinese_name, species.latin_name,
-                            confidence, protection_level=species.protection_level)]
+                            confidence, severity=species.severity)]
     if second is not None:
         other = Species.objects.exclude(pk=species.pk).first()
         if other:
@@ -54,12 +54,12 @@ def make_result(species: Species, confidence: float, second: float | None = None
 class TwoTierSchedulingTestCase(TestCase):
     def setUp(self):
         self.common = Species.objects.create(
-            chinese_name="黄腹角雉", latin_name="Tragopan caboti",
-            protection_level=Species.ProtectionLevel.NONE,
+            chinese_name="番茄健康", latin_name="",
+            severity=Species.Severity.NONE,
         )
         self.protected = Species.objects.create(
-            chinese_name="黑麂", latin_name="Muntiacus crinifrons",
-            protection_level=Species.ProtectionLevel.NATIONAL_1,
+            chinese_name="玉米北方叶枯病", latin_name="Exserohilum turcicum",
+            severity=Species.Severity.CRITICAL,
         )
         self.device = Device.objects.create(
             name="边缘网关-A", type="infrared_camera", location="百山祖",
@@ -115,7 +115,7 @@ class TwoTierSchedulingTestCase(TestCase):
         self.assertEqual(task.cloud_confidence, 0.92)
         self.assertEqual(task.edge_confidence, 0.58)
 
-    def test_protected_species_forces_cloud(self):
+    def test_high_risk_species_forces_cloud(self):
         task = self._task()
         edge = make_result(self.protected, 0.98, second=0.1, provider="edge")
         cloud = make_result(self.protected, 0.99, provider="cloud")
@@ -128,7 +128,7 @@ class TwoTierSchedulingTestCase(TestCase):
         task.refresh_from_db()
         self.assertTrue(task.escalated)
         self.assertEqual(task.escalation_reason,
-                         PredictionTask.EscalationReason.PROTECTED_SPECIES)
+                         PredictionTask.EscalationReason.HIGH_RISK)
 
     def test_ambiguous_candidates_escalate(self):
         task = self._task()

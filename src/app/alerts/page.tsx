@@ -40,10 +40,10 @@ const PAGE_SIZE = 10;
 
 const alertTypeLabels: Record<string, string> = {
   device_offline: '设备离线',
-  invasive_species: '入侵物种',
-  protection_anomaly: '保护物种异常',
+  invasive_species: '外来有害生物',
+  protection_anomaly: '病虫害异常',
   data_anomaly: '数据异常',
-  diversity_decline: '多样性下降',
+  diversity_decline: '作物健康下降',
 };
 
 const alertLevelLabels: Record<string, string> = {
@@ -153,7 +153,7 @@ export default function AlertsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">预警通知</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            设备离线、入侵物种、保护物种异常等预警信息管理
+            设备离线、病虫害异常、作物健康下降等预警信息管理
           </p>
         </div>
         <div className="flex items-center gap-2">

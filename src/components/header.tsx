@@ -204,7 +204,7 @@ export function Header() {
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
           type="search"
-          placeholder="搜索物种、设备、样区..."
+          placeholder="搜索类别、设备、样区..."
           className="w-full pl-8 h-9 bg-muted/50 border-0"
         />
       </div>

@@ -10,7 +10,7 @@ class MonitorRecordListSerializer(serializers.ModelSerializer):
     speciesId = serializers.IntegerField(source="species.id", default=None)
     speciesName = serializers.CharField(source="species.chinese_name", default="")
     speciesLatinName = serializers.CharField(source="species.latin_name", default="")
-    protectionLevel = serializers.CharField(source="species.protection_level", default="")
+    severityLevel = serializers.CharField(source="species.severity", default="")
     reviewThreshold = serializers.SerializerMethodField()
     correctedSpeciesId = serializers.IntegerField(source="corrected_species.id", default=None)
     correctedSpeciesName = serializers.CharField(source="corrected_species.chinese_name", default="")
@@ -22,7 +22,7 @@ class MonitorRecordListSerializer(serializers.ModelSerializer):
         fields = [
             "id", "deviceId", "deviceName", "timestamp",
             "lat", "lng", "surveyAreaId", "surveyAreaName",
-            "speciesId", "speciesName", "speciesLatinName", "protectionLevel",
+            "speciesId", "speciesName", "speciesLatinName", "severityLevel",
             "count", "behavior", "confidence", "review_status",
             "media_url", "media_type", "quality_flag",
             "audio_reliability", "audio_grade", "assetId",
@@ -57,7 +57,7 @@ class TrainingSampleSerializer(serializers.ModelSerializer):
     labelName = serializers.CharField(source="label.chinese_name", default="")
     labelLatinName = serializers.CharField(source="label.latin_name", default="")
     labelId = serializers.IntegerField(source="label.id", default=None)
-    protectionLevel = serializers.CharField(source="label.protection_level", default="")
+    severityLevel = serializers.CharField(source="label.severity", default="")
     deviceName = serializers.CharField(source="record.device.name", default="")
     surveyAreaName = serializers.CharField(source="record.survey_area.name", default="")
     capturedAt = serializers.DateTimeField(source="record.timestamp", default=None)
@@ -67,7 +67,7 @@ class TrainingSampleSerializer(serializers.ModelSerializer):
         # 大 JSON 字段（audio_meta/video_meta/segmentation）不进列表，避免拖慢分页
         fields = [
             "id", "recordId", "assetId", "mediaUrl", "media_type", "labelId",
-            "labelName", "labelLatinName", "protectionLevel", "label_source",
+            "labelName", "labelLatinName", "severityLevel", "label_source",
             "confidence", "quality_flag", "split", "model_version", "provider", "tier",
             "status", "deviceName", "surveyAreaName", "capturedAt",
             "exported_at", "created_at",

@@ -16,6 +16,7 @@ import {
   Cpu,
   ShieldCheck,
   FlaskConical,
+  ScanLine,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -34,8 +35,9 @@ const navigationItems = [
   { title: '监测看板', url: '/', icon: LayoutDashboard },
   { title: '样区管理', url: '/survey-areas', icon: Map },
   { title: '设备管理', url: '/devices', icon: Camera },
-  { title: '物种档案', url: '/species', icon: Bug },
+  { title: '病虫害类别', url: '/species', icon: Bug },
   { title: '监测记录', url: '/records', icon: ClipboardList },
+  { title: '病虫害识别', url: '/recognize', icon: ScanLine },
   { title: 'AI识别复核', url: '/review', icon: ClipboardList },
   { title: '证据融合', url: '/fusion', icon: GitMerge },
   { title: '识别调度', url: '/scheduling', icon: Cpu },

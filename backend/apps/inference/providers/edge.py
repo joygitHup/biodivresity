@@ -28,8 +28,8 @@ class MockEdgeProvider(InferenceProvider):
         species = list(Species.objects.all()[:60])
         if not species:
             raise RuntimeError("物种库为空，无法生成边缘识别结果")
-        # 多数样本命中常见物种，保留部分保护物种样本用于验证强制上云
-        common = [sp for sp in species if sp.protection_level == "none"]
+        # 多数样本命中健康/轻度类别，保留部分高风险样本用于验证强制上云
+        common = [sp for sp in species if sp.severity == "none"]
         pool = common if common and rnd.random() < 0.65 else species
         picked = rnd.sample(pool, min(3, len(pool)))
 
@@ -52,7 +52,7 @@ class MockEdgeProvider(InferenceProvider):
                 latin_name=sp.latin_name,
                 confidence=round(conf, 4),
                 count=1,
-                protection_level=sp.protection_level,
+                severity=sp.severity,
             )
             for sp, conf in zip(picked, confidences)
         ]

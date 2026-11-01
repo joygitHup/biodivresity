@@ -81,7 +81,7 @@ const statusVariants: Record<string, 'default' | 'secondary' | 'destructive' | '
 
 const reasonLabels: Record<string, string> = {
   low_confidence: '边缘置信度不足',
-  protected_species: '保护物种强制上云',
+  high_risk: '高风险病虫害强制上云',
   ambiguous: '候选歧义',
   low_quality: '质量异常',
   edge_error: '边缘推理异常',
@@ -368,7 +368,7 @@ export default function SchedulingPage() {
                   <Badge variant="outline">直判阈值 ≥ {policy.accept_threshold}</Badge>
                   <Badge variant="outline">歧义差 &lt; {policy.ambiguous_margin} 上云</Badge>
                   <Badge variant="outline">
-                    保护物种上云 {policy.protected_escalate ? '开' : '关'}
+                    高风险病虫害上云 {policy.protected_escalate ? '开' : '关'}
                   </Badge>
                   <Badge variant="outline">
                     质量异常上云 {policy.quality_escalate ? '开' : '关'}

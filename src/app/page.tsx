@@ -30,25 +30,31 @@ import {
 import Link from 'next/link';
 import { api } from '@/lib/api';
 
-// 颜色映射（中文分类名 → 颜色）
+// 颜色映射（中文作物名 → 颜色）
 const categoryColorMap: Record<string, string> = {
-  '哺乳类': 'oklch(0.35 0.1 155)',
-  '鸟类': 'oklch(0.6 0.12 195)',
-  '爬行类': 'oklch(0.55 0.08 70)',
-  '两栖类': 'oklch(0.7 0.17 145)',
-  '鱼类': 'oklch(0.65 0.15 230)',
-  '昆虫': 'oklch(0.75 0.16 65)',
-  '植物': 'oklch(0.5 0.12 330)',
-  '真菌': 'oklch(0.6 0.1 30)',
+  '番茄': 'oklch(0.55 0.2 25)',
+  '玉米': 'oklch(0.75 0.16 65)',
+  '苹果': 'oklch(0.35 0.1 155)',
+  '葡萄': 'oklch(0.5 0.12 330)',
+  '马铃薯': 'oklch(0.55 0.08 70)',
+  '柑橘': 'oklch(0.7 0.17 145)',
+  '桃': 'oklch(0.6 0.12 195)',
+  '辣椒': 'oklch(0.6 0.1 30)',
+  '樱桃': 'oklch(0.65 0.15 230)',
+  '草莓': 'oklch(0.6 0.14 350)',
+  '大豆': 'oklch(0.5 0.1 120)',
+  '南瓜': 'oklch(0.68 0.14 85)',
+  '蓝莓': 'oklch(0.45 0.12 280)',
+  '树莓': 'oklch(0.58 0.16 15)',
 };
 
 // 静态 label 映射
 const alertTypeLabels: Record<string, string> = {
   device_offline: '设备离线',
-  invasive_species: '入侵物种',
-  protection_anomaly: '保护物种异常',
+  invasive_species: '外来有害生物',
+  protection_anomaly: '病虫害异常',
   data_anomaly: '数据异常',
-  diversity_decline: '多样性下降',
+  diversity_decline: '作物健康下降',
 };
 
 // RAI / 活动节律数据（后端真实接口 /api/v1/analytics/rai/ /rhythm/，无数据时用占位）
@@ -118,7 +124,7 @@ export default function DashboardPage() {
   const statCards = dashboard
     ? [
         {
-          title: '监测物种总数',
+          title: '病虫害类别总数',
           value: dashboard.totalSpecies,
           icon: Leaf,
           color: 'text-emerald-600',
@@ -158,7 +164,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">监测看板</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            天空地一体化生物多样性监测概览
+            天空地一体化作物病虫害监测概览
           </p>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -261,10 +267,10 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Species Category */}
+        {/* Crop Category */}
         <Card className="lg:col-span-3">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium">物种分类分布</CardTitle>
+            <CardTitle className="text-base font-medium">作物类别组成</CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -318,7 +324,7 @@ export default function DashboardPage() {
         {/* RAI */}
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium">物种相对丰富度 (RAI)</CardTitle>
+            <CardTitle className="text-base font-medium">病虫害相对发生频度</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={240}>
@@ -352,7 +358,7 @@ export default function DashboardPage() {
         {/* Activity Rhythm */}
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium">动物活动节律</CardTitle>
+            <CardTitle className="text-base font-medium">病虫害发生节律</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={240}>
@@ -370,7 +376,7 @@ export default function DashboardPage() {
                   dataKey="count"
                   fill="oklch(0.55 0.08 70)"
                   radius={[4, 4, 0, 0]}
-                  name="拍摄频次"
+                  name="监测频次"
                 />
               </BarChart>
             </ResponsiveContainer>

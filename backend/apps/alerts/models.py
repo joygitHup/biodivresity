@@ -13,10 +13,10 @@ class AlertQuerySet(models.QuerySet):
 class Alert(models.Model):
     class Type(models.TextChoices):
         DEVICE_OFFLINE = "device_offline", "设备离线"
-        INVASIVE_SPECIES = "invasive_species", "入侵物种"
-        PROTECTION_ANOMALY = "protection_anomaly", "保护物种异常"
+        INVASIVE_SPECIES = "invasive_species", "外来有害生物"
+        PROTECTION_ANOMALY = "protection_anomaly", "病虫害异常"
         DATA_ANOMALY = "data_anomaly", "数据异常"
-        DIVERSITY_DECLINE = "diversity_decline", "多样性下降"
+        DIVERSITY_DECLINE = "diversity_decline", "作物健康下降"
         TRAINING_APPROVAL = "training_approval", "训练报告审批"
 
     class Level(models.TextChoices):

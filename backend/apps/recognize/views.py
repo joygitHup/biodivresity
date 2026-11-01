@@ -66,21 +66,30 @@ class RecognizeView(APIView):
 
         # Run inference (mock for now)
         image_bytes = image.read()
-        result = _mock_inference(image_bytes)
+        crop_id = (request.POST.get("crop_id") or "").strip()
+        result = _mock_inference(image_bytes, crop_id)
+        if not result.top_k:
+            return Response(
+                {"code": 40001, "message": "类别档案为空，请先初始化病虫害类别数据"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         request_id = f"req_{uuid.uuid4().hex[:16]}"
 
         # Save record
-        record = RecognizeRecord.objects.create(
-            user=request.user if request.user.is_authenticated else None,
-            image=image if request.user.is_authenticated else None,
-            top_category_id=result.top_k[0]["category_id"],
-            top_category_name=result.top_k[0]["name"],
-            top_confidence=result.top_k[0]["confidence"],
-            top5_result=result.top_k,
-            rejected=result.rejected,
-            model_version=result.model_version,
-            request_id=request_id,
-        )
+        fields = {
+            "user": request.user if request.user.is_authenticated else None,
+            "top_category_id": result.top_k[0]["id"],
+            "top_category_name": result.top_k[0]["name"],
+            "top_confidence": result.top_k[0]["confidence"],
+            "top5_result": result.top_k,
+            "rejected": result.rejected,
+            "model_version": result.model_version,
+            "request_id": request_id,
+        }
+        if request.user.is_authenticated:
+            image.seek(0)
+            fields["image"] = image
+        record = RecognizeRecord.objects.create(**fields)
 
         disclaimer = "识别结果仅供参考，重大病虫害请以农技部门诊断为准"
 

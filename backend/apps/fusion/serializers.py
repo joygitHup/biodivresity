@@ -77,7 +77,7 @@ class EvidenceClusterListSerializer(serializers.ModelSerializer):
     speciesId = serializers.IntegerField(source="species.id", read_only=True)
     speciesName = serializers.CharField(source="species.chinese_name", read_only=True)
     speciesLatinName = serializers.CharField(source="species.latin_name", read_only=True)
-    protectionLevel = serializers.CharField(source="species.protection_level", read_only=True)
+    severityLevel = serializers.CharField(source="species.severity", read_only=True)
     surveyAreaId = serializers.IntegerField(source="survey_area.id", read_only=True)
     surveyAreaName = serializers.CharField(source="survey_area.name", read_only=True)
     deviceName = serializers.CharField(source="device.name", read_only=True, default="")
@@ -88,7 +88,7 @@ class EvidenceClusterListSerializer(serializers.ModelSerializer):
     class Meta:
         model = EvidenceCluster
         fields = [
-            "id", "speciesId", "speciesName", "speciesLatinName", "protectionLevel",
+            "id", "speciesId", "speciesName", "speciesLatinName", "severityLevel",
             "surveyAreaId", "surveyAreaName", "deviceName",
             "window_start", "window_end", "status", "statusLabel",
             "fused_confidence", "fused_grade", "fusedGradeLabel",

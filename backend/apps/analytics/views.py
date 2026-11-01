@@ -52,16 +52,17 @@ class MonthlyTrendView(APIView):
         return Response({"code": 0, "message": "ok", "data": data})
 
 
-@extend_schema(tags=["统计分析"], summary="物种分类分布")
+@extend_schema(tags=["统计分析"], summary="作物类别组成")
 class SpeciesCategoryView(APIView):
     def get(self, request):
         qs = (
             Species.objects
-            .values("category")
+            .values("crop")
             .annotate(value=Count("id"))
+            .order_by("-value")
         )
-        label_map = {c[0]: c[1] for c in Species.Category.choices}
-        data = [{"name": label_map.get(item["category"], item["category"]), "value": item["value"]} for item in qs]
+        label_map = {c[0]: c[1] for c in Species.Crop.choices}
+        data = [{"name": label_map.get(item["crop"], item["crop"]), "value": item["value"]} for item in qs]
         return Response({"code": 0, "message": "ok", "data": data})
 
 
@@ -97,9 +98,9 @@ class DeviceOverviewView(APIView):
         return Response({"code": 0, "message": "ok", "data": data})
 
 
-@extend_schema(tags=["统计分析"], summary="RAI 活动指数 — 物种目击频次 Top")
+@extend_schema(tags=["统计分析"], summary="相对发生频度 — 病虫害类别频次 Top")
 class RaiIndexView(APIView):
-    """物种活动指数 (Relative Activity Index) — 按最近 7 天记录频次排序."""
+    """病虫害相对发生频度 (Relative Activity Index) — 按最近 7 天记录频次排序."""
 
     def get(self, request):
         days = int(request.query_params.get("days", 7))
@@ -126,9 +127,9 @@ class RaiIndexView(APIView):
         return Response({"code": 0, "message": "ok", "data": data})
 
 
-@extend_schema(tags=["统计分析"], summary="活动节律 — 按小时聚合监测记录")
+@extend_schema(tags=["统计分析"], summary="发生节律 — 按小时聚合监测记录")
 class ActivityRhythmView(APIView):
-    """按 24 小时聚合最近 7 天的监测记录，反映昼夜活动节律."""
+    """按 24 小时聚合最近 7 天的监测记录，反映病虫害发生的时间节律."""
 
     def get(self, request):
         days = int(request.query_params.get("days", 7))

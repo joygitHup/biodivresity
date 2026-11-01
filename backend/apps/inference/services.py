@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 RETRY_BACKOFF_SECONDS = [10, 30, 90]
 STUCK_TASK_MINUTES = 15
 UNSUPPORTED_SOURCES = {MediaAsset.SourceType.EDNA}
-PROTECTED_LEVELS = {"national_1", "national_2", "provincial", "invasive"}
+HIGH_RISK_LEVELS = {"high", "critical"}
 
 
 # ── 两级调度配置 ─────────────────────────────────────────────
@@ -113,31 +113,31 @@ def cloud_budget_used(exclude_task_id: int | None = None) -> int:
     return qs.count()
 
 
-def _is_protected(item) -> bool:
+def _is_high_risk(item) -> bool:
     if item is None:
         return False
-    if item.protection_level and item.protection_level != "none":
-        return True
+    if item.severity and item.severity != "none":
+        return item.severity in HIGH_RISK_LEVELS
     if item.species_id:
         level = Species.objects.filter(pk=item.species_id).values_list(
-            "protection_level", flat=True,
+            "severity", flat=True,
         ).first()
-        return bool(level and level in PROTECTED_LEVELS)
+        return bool(level and level in HIGH_RISK_LEVELS)
     return False
 
 
 def decide_edge(result: PredictResult, settings: dict) -> tuple[bool, str]:
-    """增强版判定策略：保护物种/歧义/质量异常一律上云，其余按阈值直判。
+    """增强版判定策略：高风险病虫害/歧义/质量异常一律上云，其余按阈值直判。
 
-    保护物种例外：在 edge_protected_exceptions 中的物种不强制上云，按普通阈值判定。
+    高风险例外：在 edge_protected_exceptions 中的类别不强制上云，按普通阈值判定。
     """
     top1 = result.top1
     if top1 is None:
         return False, PredictionTask.EscalationReason.LOW_CONFIDENCE
     exceptions = settings.get("protected_exceptions") or set()
-    if settings["protected_escalate"] and _is_protected(top1):
+    if settings["protected_escalate"] and _is_high_risk(top1):
         if top1.species_id not in exceptions:
-            return False, PredictionTask.EscalationReason.PROTECTED_SPECIES
+            return False, PredictionTask.EscalationReason.HIGH_RISK
     if len(result.top_k) > 1:
         gap = top1.confidence - result.top_k[1].confidence
         if gap < settings["ambiguous_margin"]:
@@ -328,6 +328,9 @@ def _create_record(task: PredictionTask, asset: MediaAsset, result: PredictResul
         return None
 
     species = Species.objects.filter(pk=top1.species_id).first() if top1.species_id else None
+    if species is None and top1.chinese_name:
+        # 类别映射未写死主键时，按名称回查档案
+        species = Species.objects.filter(chinese_name=top1.chinese_name).first()
 
     media_type = {
         MediaAsset.SourceType.AUDIO: MonitorRecord.MediaType.AUDIO,
@@ -724,7 +727,7 @@ def _result_from_payload(payload: dict, *, provider: str, latency_ms: int) -> Pr
             confidence=float(item.get("confidence", 0)),
             count=int(item.get("count", 1)),
             bbox=item.get("bbox"),
-            protection_level=item.get("protection_level", "none"),
+            severity=item.get("severity", "none"),
         )
         for item in payload.get("top_k", [])
     ]

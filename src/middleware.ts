@@ -8,6 +8,7 @@ const PROTECTED_PREFIXES = [
   "/devices",
   "/species",
   "/records",
+  "/recognize",
   "/review",
   "/analytics",
   "/alerts",

@@ -401,7 +401,7 @@ export const api = {
     create: (data: any) => request<any>(`/api/v1/species/`, { method: "POST", body: JSON.stringify(data) }),
     update: (id: number, data: any) => request<any>(`/api/v1/species/${id}/`, { method: "PUT", body: JSON.stringify(data) }),
     delete: (id: number) => request<any>(`/api/v1/species/${id}/`, { method: "DELETE" }),
-    // 上传物种照片（文件存入 MinIO）
+    // 上传类别照片（文件存入 MinIO）
     uploadPhoto: (id: number, file: File) => {
       const fd = new FormData();
       fd.append("file", file);
@@ -462,7 +462,7 @@ export const api = {
   // ── Recognize ───────────────────────────────────────────────
   recognize: {
     upload: (file: File, cropId?: string) => requestFile("/api/v1/recognize/", file, cropId ? { crop_id: cropId } : undefined),
-    history: (params?: Record<string, any>) => request<any[]>("/api/v1/recognize/records/", params),
+    history: (params?: Record<string, any>) => requestPage<any>("/api/v1/recognize/records/", params),
     historyDetail: (id: number) => request<any>(`/api/v1/recognize/records/${id}/`),
   },
 

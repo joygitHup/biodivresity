@@ -22,17 +22,17 @@ MAX_PHOTO_SIZE = 10 * 1024 * 1024  # 10MB
 
 
 @extend_schema_view(
-    list=extend_schema(summary="物种列表"),
-    retrieve=extend_schema(summary="物种详情"),
-    create=extend_schema(summary="创建物种"),
-    update=extend_schema(summary="更新物种"),
-    partial_update=extend_schema(summary="部分更新物种"),
-    destroy=extend_schema(summary="删除物种"),
+    list=extend_schema(summary="病虫害类别列表"),
+    retrieve=extend_schema(summary="病虫害类别详情"),
+    create=extend_schema(summary="创建病虫害类别"),
+    update=extend_schema(summary="更新病虫害类别"),
+    partial_update=extend_schema(summary="部分更新病虫害类别"),
+    destroy=extend_schema(summary="删除病虫害类别"),
 )
 class SpeciesViewSet(AuditModelViewSetMixin, viewsets.ModelViewSet):
     queryset = Species.objects.all()
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ["category", "protection_level", "iucn_status"]
+    filterset_fields = ["crop", "damage_type", "part", "severity"]
     search_fields = ["chinese_name", "latin_name"]
     ordering_fields = ["record_count", "created_at"]
     ordering = ["-record_count"]
@@ -74,7 +74,7 @@ class SpeciesViewSet(AuditModelViewSetMixin, viewsets.ModelViewSet):
 
         return Response(SpeciesDetailSerializer(instance).data)
 
-    @extend_schema(summary="上传/更新物种照片")
+    @extend_schema(summary="上传/更新病虫害样本照片")
     @action(
         detail=True, methods=["post"],
         parser_classes=[MultiPartParser, FormParser],

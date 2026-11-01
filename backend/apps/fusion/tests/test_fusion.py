@@ -28,12 +28,12 @@ class FusionTestCase(TestCase):
             elevation="500-800", lat=27.9, lng=119.2,
         )
         self.species = Species.objects.create(
-            chinese_name="黑麂", latin_name="Muntiacus crinifrons",
-            protection_level=Species.ProtectionLevel.NATIONAL_1,
+            chinese_name="番茄晚疫病", latin_name="Phytophthora infestans",
+            severity=Species.Severity.CRITICAL,
         )
         self.other = Species.objects.create(
-            chinese_name="猕猴", latin_name="Macaca mulatta",
-            protection_level=Species.ProtectionLevel.NATIONAL_2,
+            chinese_name="番茄早疫病", latin_name="Alternaria solani",
+            severity=Species.Severity.MEDIUM,
         )
         self.device = Device.objects.create(
             name="红外相机-T01", type=Device.Type.INFRARED_CAMERA,

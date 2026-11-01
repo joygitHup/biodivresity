@@ -138,7 +138,7 @@ export default function SystemPage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">系统管理</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          用户权限管理、AI模型管理、物种分类体系与系统配置
+          用户权限管理、AI模型管理、病虫害类别体系与系统配置
         </p>
       </div>
 
@@ -1454,8 +1454,8 @@ const CONFIG_GROUPS: {
       },
       {
         key: 'review_threshold_protected',
-        label: '保护物种复核阈值',
-        hint: '国家/省级保护物种默认阈值',
+        label: '高风险病虫害复核阈值',
+        hint: '高风险/严重等级类别默认阈值',
         type: 'select',
         options: [
           { value: '0.7', label: '0.7' },
@@ -1465,8 +1465,8 @@ const CONFIG_GROUPS: {
       },
       {
         key: 'review_threshold_common',
-        label: '常见物种复核阈值',
-        hint: '非保护物种默认阈值',
+        label: '普通类别复核阈值',
+        hint: '非高风险类别默认阈值',
         type: 'select',
         options: [
           { value: '0.5', label: '0.5' },
@@ -1487,8 +1487,8 @@ const CONFIG_GROUPS: {
       },
       {
         key: 'protection_alert_days',
-        label: '保护物种异常周期',
-        hint: '连续多少天未监测到触发预警',
+        label: '高风险病虫害预警回溯周期',
+        hint: '该周期内高风险类别的异常触发预警',
         type: 'select',
         options: [
           { value: '15', label: '15天' },
@@ -1522,8 +1522,8 @@ const CONFIG_GROUPS: {
       },
       {
         key: 'auto_confirm_skip_protected',
-        label: '保护物种跳过自动确认',
-        hint: '保护物种仍走人工复核，避免误判风险',
+        label: '高风险病虫害跳过自动确认',
+        hint: '高风险类别仍走人工复核，避免误判风险',
         type: 'switch',
       },
       {
@@ -1631,8 +1631,8 @@ const CONFIG_GROUPS: {
       },
       {
         key: 'training_force_manual_for_protected',
-        label: '保护物种强制人工审批',
-        hint: '训练样本含保护/入侵物种时，不允许自动通过',
+        label: '高风险病虫害强制人工审批',
+        hint: '训练样本含高风险/虫害类别时，不允许自动通过',
         type: 'switch',
       },
       {
@@ -1650,7 +1650,7 @@ const CONFIG_GROUPS: {
       },
       {
         key: 'training_gate_protected_recall',
-        label: '保护物种召回率下限',
+        label: '高风险病虫害召回率下限',
         hint: '低于该值时质量门禁标记为未通过',
         type: 'select',
         options: [
@@ -1816,7 +1816,7 @@ const CONFIG_GROUPS: {
       {
         key: 'fusion_review_integration_enabled',
         label: '复核结果接入融合',
-        hint: '已驳回记录剔除，已纠正记录按修正物种分组，已确认/纠正记录提升可靠性',
+        hint: '已驳回记录剔除，已纠正记录按修正类别分组，已确认/纠正记录提升可靠性',
         type: 'select',
         options: [
           { value: 'true', label: '启用' },
@@ -1864,7 +1864,7 @@ const CONFIG_GROUPS: {
       {
         key: 'fusion_auto_alert_enabled',
         label: '强证据自动预警',
-        hint: '保护物种/入侵物种的强证据自动生成预警',
+        hint: '高风险/虫害类别的强证据自动生成预警',
         type: 'select',
         options: [
           { value: 'true', label: '启用' },
@@ -1874,7 +1874,7 @@ const CONFIG_GROUPS: {
       {
         key: 'fusion_window_hours',
         label: '融合时间窗',
-        hint: '同一物种在该窗口内聚合证据',
+        hint: '同一类别在该窗口内聚合证据',
         type: 'select',
         options: [
           { value: '6', label: '6小时' },
@@ -1984,7 +1984,7 @@ const CONFIG_GROUPS: {
       {
         key: 'fusion_conflict_margin',
         label: '冲突判定置信度差',
-        hint: '同区域同时段高置信物种差值达到此值提示冲突',
+        hint: '同区域同时段高置信类别差值达到此值提示冲突',
         type: 'select',
         options: [
           { value: '0.1', label: '0.1' },
@@ -2044,8 +2044,8 @@ const CONFIG_GROUPS: {
       },
       {
         key: 'edge_protected_escalate',
-        label: '保护物种强制上云',
-        hint: '保护物种即便边缘高置信也交由云端复核',
+        label: '高风险病虫害强制上云',
+        hint: '高风险类别即便边缘高置信也交由云端复核',
         type: 'select',
         options: [
           { value: 'true', label: '启用' },
@@ -2097,8 +2097,8 @@ const CONFIG_GROUPS: {
       },
       {
         key: 'edge_protected_exceptions',
-        label: '保护物种例外(物种ID)',
-        hint: '逗号分隔的物种ID，这些保护物种不强制上云，按普通阈值判定',
+        label: '高风险强制上云例外(类别ID)',
+        hint: '逗号分隔的类别ID，这些类别不强制上云，按普通阈值判定',
         type: 'text',
         placeholder: '如: 12,45,78',
       },
@@ -2146,7 +2146,7 @@ const CONFIG_GROUPS: {
       {
         key: 'edge_model_version',
         label: '边缘模型版本号',
-        hint: '部署在边缘侧的轻量模型版本，与云端物种库类别集一致',
+        hint: '部署在边缘侧的轻量模型版本，与云端病虫害类别集一致',
         type: 'text',
         placeholder: '如 edge-yolov8n-v1.2',
       },

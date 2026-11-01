@@ -136,7 +136,7 @@ class RemoteHttpProvider(InferenceProvider):
                 confidence=float(item.get("confidence", 0)),
                 count=int(item.get("count", 1)),
                 bbox=item.get("bbox"),
-                protection_level=item.get("protection_level", "none"),
+                severity=item.get("severity", "none"),
             )
             for item in payload.get("top_k", [])
         ]

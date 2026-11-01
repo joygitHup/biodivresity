@@ -35,46 +35,52 @@ import {
 import { Download } from 'lucide-react';
 import { api } from '@/lib/api';
 
-const protectionDistribution = [
-  { level: '国家一级', count: 12, color: 'oklch(0.55 0.2 25)' },
-  { level: '国家二级', count: 28, color: 'oklch(0.75 0.16 65)' },
-  { level: '省级保护', count: 35, color: 'oklch(0.7 0.17 145)' },
-  { level: '无保护', count: 380, color: 'oklch(0.6 0.12 195)' },
-  { level: '入侵物种', count: 8, color: 'oklch(0.5 0.12 330)' },
+const severityDistribution = [
+  { level: '严重', count: 8, color: 'oklch(0.55 0.2 25)' },
+  { level: '较高', count: 12, color: 'oklch(0.75 0.16 65)' },
+  { level: '中度', count: 15, color: 'oklch(0.7 0.17 145)' },
+  { level: '轻度', count: 3, color: 'oklch(0.6 0.12 195)' },
+  { level: '健康', count: 0, color: 'oklch(0.5 0.12 330)' },
 ];
 
-const placeholderDiversityIndex = [
-  { area: '凤阳山北麓', shannon: 3.2, simpson: 0.89, richness: 86 },
-  { area: '百山祖南坡', shannon: 3.8, simpson: 0.92, richness: 112 },
-  { area: '瓯江源头', shannon: 2.6, simpson: 0.82, richness: 64 },
-  { area: '庆元农田', shannon: 1.8, simpson: 0.72, richness: 42 },
-  { area: '龙泉溪', shannon: 2.4, simpson: 0.78, richness: 53 },
-  { area: '景宁畲族乡', shannon: 2.9, simpson: 0.85, richness: 71 },
+const placeholderAreaRisk = [
+  { area: '凤阳山北麓', disease: 2.6, pest: 3.1 },
+  { area: '百山祖南坡', disease: 3.4, pest: 2.2 },
+  { area: '瓯江源头', disease: 1.9, pest: 2.8 },
+  { area: '庆元农田', disease: 4.2, pest: 3.6 },
+  { area: '龙泉溪', disease: 2.4, pest: 1.8 },
+  { area: '景宁畲族乡', disease: 3.1, pest: 2.5 },
 ];
 
 const placeholderAppearanceRate = [
-  { month: '1月', rate_黑麂: 15, rate_白鹇: 32, rate_猕猴: 28 },
-  { month: '2月', rate_黑麂: 12, rate_白鹇: 28, rate_猕猴: 25 },
-  { month: '3月', rate_黑麂: 18, rate_白鹇: 35, rate_猕猴: 30 },
-  { month: '4月', rate_黑麂: 22, rate_白鹇: 40, rate_猕猴: 35 },
-  { month: '5月', rate_黑麂: 28, rate_白鹇: 45, rate_猕猴: 38 },
-  { month: '6月', rate_黑麂: 30, rate_白鹇: 42, rate_猕猴: 40 },
-  { month: '7月', rate_黑麂: 25, rate_白鹇: 38, rate_猕猴: 42 },
-  { month: '8月', rate_黑麂: 20, rate_白鹇: 35, rate_猕猴: 38 },
-  { month: '9月', rate_黑麂: 18, rate_白鹇: 30, rate_猕猴: 32 },
-  { month: '10月', rate_黑麂: 15, rate_白鹇: 28, rate_猕猴: 28 },
+  { month: '1月', cornLeafBlight: 12, tomatoLateBlight: 8, tomatoSpiderMite: 5 },
+  { month: '2月', cornLeafBlight: 15, tomatoLateBlight: 10, tomatoSpiderMite: 6 },
+  { month: '3月', cornLeafBlight: 20, tomatoLateBlight: 14, tomatoSpiderMite: 9 },
+  { month: '4月', cornLeafBlight: 26, tomatoLateBlight: 20, tomatoSpiderMite: 14 },
+  { month: '5月', cornLeafBlight: 32, tomatoLateBlight: 28, tomatoSpiderMite: 22 },
+  { month: '6月', cornLeafBlight: 38, tomatoLateBlight: 35, tomatoSpiderMite: 30 },
+  { month: '7月', cornLeafBlight: 34, tomatoLateBlight: 40, tomatoSpiderMite: 36 },
+  { month: '8月', cornLeafBlight: 28, tomatoLateBlight: 33, tomatoSpiderMite: 41 },
+  { month: '9月', cornLeafBlight: 22, tomatoLateBlight: 25, tomatoSpiderMite: 34 },
+  { month: '10月', cornLeafBlight: 16, tomatoLateBlight: 17, tomatoSpiderMite: 24 },
 ];
 
-// 颜色映射
+// 颜色映射（中文作物名 → 颜色）
 const categoryColorMap: Record<string, string> = {
-  '哺乳类': 'oklch(0.35 0.1 155)',
-  '鸟类': 'oklch(0.6 0.12 195)',
-  '爬行类': 'oklch(0.55 0.08 70)',
-  '两栖类': 'oklch(0.7 0.17 145)',
-  '鱼类': 'oklch(0.65 0.15 230)',
-  '昆虫': 'oklch(0.75 0.16 65)',
-  '植物': 'oklch(0.5 0.12 330)',
-  '真菌': 'oklch(0.6 0.1 30)',
+  '番茄': 'oklch(0.55 0.2 25)',
+  '玉米': 'oklch(0.75 0.16 65)',
+  '苹果': 'oklch(0.35 0.1 155)',
+  '葡萄': 'oklch(0.5 0.12 330)',
+  '马铃薯': 'oklch(0.55 0.08 70)',
+  '柑橘': 'oklch(0.7 0.17 145)',
+  '桃': 'oklch(0.6 0.12 195)',
+  '辣椒': 'oklch(0.6 0.1 30)',
+  '樱桃': 'oklch(0.65 0.15 230)',
+  '草莓': 'oklch(0.6 0.14 350)',
+  '大豆': 'oklch(0.5 0.1 120)',
+  '南瓜': 'oklch(0.68 0.14 85)',
+  '蓝莓': 'oklch(0.45 0.12 280)',
+  '树莓': 'oklch(0.58 0.16 15)',
 };
 
 export default function AnalyticsPage() {
@@ -126,7 +132,7 @@ export default function AnalyticsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">统计分析</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            物种多样性分析、相对丰富度、活动节律与出现率统计
+            作物病虫害统计分析、危害等级分布、发生频度与调度趋势
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -160,10 +166,10 @@ export default function AnalyticsPage() {
 
       <Tabs defaultValue="diversity" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="diversity">多样性分析</TabsTrigger>
-          <TabsTrigger value="rai">相对丰富度</TabsTrigger>
-          <TabsTrigger value="rhythm">活动节律</TabsTrigger>
-          <TabsTrigger value="appearance">出现率分析</TabsTrigger>
+          <TabsTrigger value="diversity">类别分析</TabsTrigger>
+          <TabsTrigger value="rai">发生频度</TabsTrigger>
+          <TabsTrigger value="rhythm">发生节律</TabsTrigger>
+          <TabsTrigger value="appearance">发生率分析</TabsTrigger>
           <TabsTrigger value="trend">趋势分析</TabsTrigger>
           <TabsTrigger value="scheduling">识别调度</TabsTrigger>
         </TabsList>
@@ -173,7 +179,7 @@ export default function AnalyticsPage() {
           <div className="grid gap-4 lg:grid-cols-2">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">物种分类组成</CardTitle>
+                <CardTitle className="text-base">作物类别组成</CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -225,17 +231,17 @@ export default function AnalyticsPage() {
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">保护等级分布</CardTitle>
+                <CardTitle className="text-base">危害等级分布</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={protectionDistribution}>
+                  <BarChart data={severityDistribution}>
                     <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0.01 155)" />
                     <XAxis dataKey="level" tick={{ fontSize: 11 }} stroke="oklch(0.5 0.02 155)" />
                     <YAxis tick={{ fontSize: 12 }} stroke="oklch(0.5 0.02 155)" />
                     <Tooltip />
-                    <Bar dataKey="count" name="物种数" radius={[4, 4, 0, 0]}>
-                      {protectionDistribution.map((entry, index) => (
+                    <Bar dataKey="count" name="类别数" radius={[4, 4, 0, 0]}>
+                      {severityDistribution.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Bar>
@@ -247,19 +253,26 @@ export default function AnalyticsPage() {
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">各样区多样性指数对比</CardTitle>
+              <CardTitle className="text-base">各样区病虫害发生强度对比</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <RadarChart data={placeholderDiversityIndex}>
+                <RadarChart data={placeholderAreaRisk}>
                   <PolarGrid stroke="oklch(0.92 0.01 155)" />
                   <PolarAngleAxis dataKey="area" tick={{ fontSize: 11 }} />
                   <PolarRadiusAxis tick={{ fontSize: 10 }} />
                   <Radar
-                    name="Shannon指数"
-                    dataKey="shannon"
+                    name="病害强度"
+                    dataKey="disease"
                     stroke="oklch(0.35 0.1 155)"
                     fill="oklch(0.35 0.1 155)"
+                    fillOpacity={0.3}
+                  />
+                  <Radar
+                    name="虫害强度"
+                    dataKey="pest"
+                    stroke="oklch(0.75 0.16 65)"
+                    fill="oklch(0.75 0.16 65)"
                     fillOpacity={0.3}
                   />
                   <Legend />
@@ -274,7 +287,7 @@ export default function AnalyticsPage() {
         <TabsContent value="rai">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">物种相对丰富度 (RAI)</CardTitle>
+              <CardTitle className="text-base">病虫害相对发生频度</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-[400px] flex items-center justify-center text-muted-foreground text-sm">
@@ -288,7 +301,7 @@ export default function AnalyticsPage() {
         <TabsContent value="rhythm">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">动物活动节律分析</CardTitle>
+              <CardTitle className="text-base">病虫害发生节律分析</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-[400px] flex items-center justify-center text-muted-foreground text-sm">
@@ -302,7 +315,7 @@ export default function AnalyticsPage() {
         <TabsContent value="appearance">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">物种出现率月度变化</CardTitle>
+              <CardTitle className="text-base">病虫害发生率月度变化</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
@@ -314,27 +327,27 @@ export default function AnalyticsPage() {
                   <Legend />
                   <Line
                     type="monotone"
-                    dataKey="rate_黑麂"
+                    dataKey="cornLeafBlight"
                     stroke="oklch(0.35 0.1 155)"
                     strokeWidth={2}
                     dot={{ r: 3 }}
-                    name="黑麂"
+                    name="玉米北方叶枯病"
                   />
                   <Line
                     type="monotone"
-                    dataKey="rate_白鹇"
+                    dataKey="tomatoLateBlight"
                     stroke="oklch(0.6 0.12 195)"
                     strokeWidth={2}
                     dot={{ r: 3 }}
-                    name="白鹇"
+                    name="番茄晚疫病"
                   />
                   <Line
                     type="monotone"
-                    dataKey="rate_猕猴"
+                    dataKey="tomatoSpiderMite"
                     stroke="oklch(0.55 0.08 70)"
                     strokeWidth={2}
                     dot={{ r: 3 }}
-                    name="猕猴"
+                    name="番茄二点叶螨"
                   />
                 </LineChart>
               </ResponsiveContainer>

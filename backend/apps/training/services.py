@@ -16,7 +16,7 @@ from django.utils import timezone
 
 from apps.records.models import TrainingSample
 from apps.records.services import (
-    PROTECTED_LEVELS,
+    HIGH_RISK_LEVELS,
     config_bool,
     config_float,
     config_value,
@@ -113,7 +113,7 @@ def create_snapshot(run: TrainingRun, actor=None) -> DatasetSnapshot:
             "id": label.id,
             "name": label.chinese_name,
             "latin": label.latin_name,
-            "protection_level": label.protection_level,
+            "severity": label.severity,
             "count": 0,
             "train": 0,
             "val": 0,
@@ -122,7 +122,7 @@ def create_snapshot(run: TrainingRun, actor=None) -> DatasetSnapshot:
         entry["count"] += 1
         entry[split] = entry.get(split, 0) + 1
         source_stats[sample.label_source] = source_stats.get(sample.label_source, 0) + 1
-        if label.protection_level in PROTECTED_LEVELS or label.protection_level == "invasive":
+        if label.severity in HIGH_RISK_LEVELS:
             protected_count += 1
 
     return DatasetSnapshot.objects.create(
@@ -167,13 +167,13 @@ def simulate_metrics(run: TrainingRun) -> dict:
     worst = None
     for cls in classes:
         support = cls.get("count", 0)
-        # 样本量越大越稳定；保护物种略保守
+        # 样本量越大越稳定；高风险病虫害略保守
         base = min(0.995, 0.80 + support / max(total, 1) * 0.15 + rng.random() * 0.06)
         recall = round(base, 4)
         precision = round(min(0.999, recall + rng.uniform(-0.05, 0.05)), 4)
         f1 = round(2 * precision * recall / (precision + recall), 4) if (precision + recall) else 0
         weighted_correct += recall * support
-        is_protected = cls.get("protection_level") in PROTECTED_LEVELS or cls.get("protection_level") == "invasive"
+        is_protected = cls.get("severity") in HIGH_RISK_LEVELS
         if is_protected:
             protected_support += support
             protected_correct += recall * support
@@ -185,7 +185,7 @@ def simulate_metrics(run: TrainingRun) -> dict:
             "recall": recall,
             "precision": precision,
             "f1": f1,
-            "protection_level": cls.get("protection_level"),
+            "severity": cls.get("severity"),
             "protected": is_protected,
         })
         if worst is None or recall < worst["recall"]:
@@ -281,7 +281,7 @@ def evaluate_quality_gate(metrics: dict) -> dict:
         },
         {
             "key": "protected_recall",
-            "label": "保护/入侵物种召回率",
+            "label": "高风险病虫害召回率",
             "value": metrics.get("protected_recall", 0),
             "threshold": min_protected,
             "passed": (not has_protected) or metrics.get("protected_recall", 0) >= min_protected,
@@ -364,7 +364,7 @@ def build_report_html(run: TrainingRun, report: TrainingReport) -> str:
             f"<td>{_fmt_pct(cls.get('recall'))}</td>"
             f"<td>{_fmt_pct(cls.get('precision'))}</td>"
             f"<td>{_fmt_pct(cls.get('f1'))}</td>"
-            f"<td>{'保护/入侵' if cls.get('protected') else '—'}</td>"
+            f"<td>{'高风险' if cls.get('protected') else '—'}</td>"
             "</tr>"
         )
 
@@ -482,7 +482,7 @@ def build_report_html(run: TrainingRun, report: TrainingReport) -> str:
     <div class="card"><div class="label">类别数</div><div class="value">{snapshot.class_count if snapshot else 0}</div></div>
     <div class="card"><div class="label">训练 / 验证 / 测试</div>
       <div class="value" style="font-size:15px">{snapshot.train_count if snapshot else 0} / {snapshot.val_count if snapshot else 0} / {snapshot.test_count if snapshot else 0}</div></div>
-    <div class="card"><div class="label">保护/入侵样本</div><div class="value">{(snapshot.source_stats or {}).get('protected', 0) if snapshot else 0}</div></div>
+    <div class="card"><div class="label">高风险类别样本</div><div class="value">{(snapshot.source_stats or {}).get('protected', 0) if snapshot else 0}</div></div>
   </div>
   <p class="muted" style="font-size:12px;margin-top:10px">快照哈希：{_esc(snapshot.sample_hash if snapshot else '')}</p>
   <p><strong>标签来源：</strong>{source_html}</p>
@@ -493,7 +493,7 @@ def build_report_html(run: TrainingRun, report: TrainingReport) -> str:
     <div class="card"><div class="label">Top-5 准确率</div><div class="value">{_fmt_pct(metrics.get('top5_accuracy'))}</div></div>
     <div class="card"><div class="label">mAP@0.5</div><div class="value">{_fmt_pct(metrics.get('map50'))}</div></div>
     <div class="card"><div class="label">Macro F1</div><div class="value">{_fmt_pct(metrics.get('macro_f1'))}</div></div>
-    <div class="card"><div class="label">保护物种召回率</div><div class="value">{_fmt_pct(metrics.get('protected_recall'))}</div></div>
+    <div class="card"><div class="label">高风险病虫害召回率</div><div class="value">{_fmt_pct(metrics.get('protected_recall'))}</div></div>
     <div class="card"><div class="label">误报率</div><div class="value">{_fmt_pct(metrics.get('false_positive_rate'))}</div></div>
   </div>
 
@@ -506,7 +506,7 @@ def build_report_html(run: TrainingRun, report: TrainingReport) -> str:
   {compare_html}
 
   <h2>五、逐类指标</h2>
-  <table><thead><tr><th>物种</th><th>拉丁名</th><th>样本数</th><th>召回率</th><th>精确率</th><th>F1</th><th>保护级别</th></tr></thead>
+  <table><thead><tr><th>类别</th><th>学名</th><th>样本数</th><th>召回率</th><th>精确率</th><th>F1</th><th>危害等级</th></tr></thead>
   <tbody>{rows or "<tr><td colspan='7' class='muted'>无类别数据</td></tr>"}</tbody></table>
 
   <h2>六、混淆矩阵摘要</h2>
@@ -554,7 +554,7 @@ def generate_report(run: TrainingRun) -> TrainingReport:
         f"本次训练使用 {run.snapshot.sample_count if run.snapshot else 0} 条样本、"
         f"{run.snapshot.class_count if run.snapshot else 0} 个类别，"
         f"Top-1 {_fmt_pct(metrics.get('top1_accuracy'))}，"
-        f"保护物种召回率 {_fmt_pct(metrics.get('protected_recall'))}。"
+        f"高风险病虫害召回率 {_fmt_pct(metrics.get('protected_recall'))}。"
     )
     if worst:
         conclusion += f"表现最差类别为 {worst.get('name')}（召回率 {_fmt_pct(worst.get('recall'))}）。"

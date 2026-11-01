@@ -158,7 +158,7 @@ export default function RecordsPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">监测记录</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            查看和管理所有监测设备采集的物种识别记录
+            查看和管理所有监测设备采集的病虫害识别记录
           </p>
         </div>
         {canExport && (
@@ -186,7 +186,7 @@ export default function RecordsPage() {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="搜索物种名、设备名..."
+            placeholder="搜索类别名、设备名..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-8"
@@ -243,10 +243,10 @@ export default function RecordsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>时间</TableHead>
-                  <TableHead>物种</TableHead>
+                  <TableHead>类别</TableHead>
                   <TableHead>设备</TableHead>
                   <TableHead>样区</TableHead>
-                  <TableHead>行为</TableHead>
+                  <TableHead>症状</TableHead>
                   <TableHead>数量</TableHead>
                   <TableHead>置信度</TableHead>
                   <TableHead>复核状态</TableHead>

@@ -2,56 +2,71 @@ from django.db import models
 
 
 class SpeciesQuerySet(models.QuerySet):
-    def by_protection(self, level):
-        return self.filter(protection_level=level)
+    def by_severity(self, level):
+        return self.filter(severity=level)
 
 
 class Species(models.Model):
-    class ProtectionLevel(models.TextChoices):
-        NATIONAL_1 = "national_1", "国家一级"
-        NATIONAL_2 = "national_2", "国家二级"
-        PROVINCIAL = "provincial", "省级保护"
-        NONE = "none", "无保护"
-        INVASIVE = "invasive", "入侵物种"
+    """病虫害类别档案（原物种档案，已按作物-病虫害语义重构）。
 
-    class IUCNStatus(models.TextChoices):
-        LC = "LC", "无危"
-        NT = "NT", "近危"
-        VU = "VU", "易危"
-        EN = "EN", "濒危"
-        CR = "CR", "极危"
-        EW = "EW", "野外灭绝"
-        EX = "EX", "灭绝"
+    一行代表「某作物的某种病虫害或健康状态」，例如「番茄叶片晚疫病」。
+    """
 
-    class Category(models.TextChoices):
-        MAMMAL = "mammal", "哺乳类"
-        BIRD = "bird", "鸟类"
-        REPTILE = "reptile", "爬行类"
-        AMPHIBIAN = "amphibian", "两栖类"
-        FISH = "fish", "鱼类"
-        INSECT = "insect", "昆虫"
-        PLANT = "plant", "植物"
-        FUNGI = "fungi", "真菌"
+    class Severity(models.TextChoices):
+        LOW = "low", "轻度"
+        MEDIUM = "medium", "中度"
+        HIGH = "high", "较高"
+        CRITICAL = "critical", "严重"
+        NONE = "none", "无（健康）"
 
-    chinese_name = models.CharField(max_length=100, verbose_name="中文名")
-    latin_name = models.CharField(max_length=200, verbose_name="拉丁名")
-    kingdom = models.CharField(max_length=50, blank=True, verbose_name="界")
-    phylum = models.CharField(max_length=50, blank=True, verbose_name="门")
-    class_name = models.CharField(max_length=50, blank=True, verbose_name="纲")
-    order = models.CharField(max_length=50, blank=True, verbose_name="目")
-    family = models.CharField(max_length=50, blank=True, verbose_name="科")
-    genus = models.CharField(max_length=50, blank=True, verbose_name="属")
-    protection_level = models.CharField(max_length=20, choices=ProtectionLevel.choices, default=ProtectionLevel.NONE, verbose_name="保护级别")
-    iucn_status = models.CharField(max_length=10, choices=IUCNStatus.choices, default=IUCNStatus.LC, verbose_name="IUCN状态")
-    category = models.CharField(max_length=20, choices=Category.choices, default=Category.MAMMAL, verbose_name="分类")
+    class DamageType(models.TextChoices):
+        DISEASE = "disease", "病害"
+        PEST = "pest", "虫害"
+        HEALTHY = "healthy", "健康"
+
+    class Crop(models.TextChoices):
+        APPLE = "apple", "苹果"
+        BLUEBERRY = "blueberry", "蓝莓"
+        CHERRY = "cherry", "樱桃"
+        CORN = "corn", "玉米"
+        GRAPE = "grape", "葡萄"
+        ORANGE = "orange", "柑橘"
+        PEACH = "peach", "桃"
+        PEPPER = "pepper", "辣椒"
+        POTATO = "potato", "马铃薯"
+        RASPBERRY = "raspberry", "树莓"
+        SOYBEAN = "soybean", "大豆"
+        SQUASH = "squash", "南瓜"
+        STRAWBERRY = "strawberry", "草莓"
+        TOMATO = "tomato", "番茄"
+
+    class Part(models.TextChoices):
+        LEAF = "leaf", "叶片"
+        FRUIT = "fruit", "果实"
+        STEM = "stem", "茎秆"
+        ROOT = "root", "根茎"
+        WHOLE = "whole", "整株"
+
+    chinese_name = models.CharField(max_length=100, verbose_name="病虫害名称")
+    latin_name = models.CharField(max_length=200, blank=True, verbose_name="学名/拉丁名")
+    crop = models.CharField(max_length=20, choices=Crop.choices, default=Crop.TOMATO, verbose_name="作物")
+    damage_type = models.CharField(
+        max_length=20, choices=DamageType.choices, default=DamageType.DISEASE, verbose_name="病虫害类型",
+    )
+    part = models.CharField(max_length=20, choices=Part.choices, default=Part.LEAF, verbose_name="受害部位")
+    severity = models.CharField(
+        max_length=20, choices=Severity.choices, default=Severity.NONE, verbose_name="危害等级",
+    )
+    symptoms = models.TextField(blank=True, verbose_name="症状特征")
+    prevention = models.TextField(blank=True, verbose_name="防治建议")
     description = models.TextField(blank=True, verbose_name="描述")
-    distribution = models.CharField(max_length=200, blank=True, verbose_name="分布")
+    distribution = models.CharField(max_length=200, blank=True, verbose_name="发生区域")
     image_url = models.URLField(blank=True, verbose_name="图片")
     record_count = models.IntegerField(default=0, verbose_name="监测记录数")
     review_threshold = models.FloatField(
         null=True, blank=True,
         verbose_name="复核阈值",
-        help_text="留空则按保护等级取系统默认：保护物种0.8、常见物种0.6",
+        help_text="留空则按危害等级取系统默认：高风险0.8、其余0.6",
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -60,6 +75,6 @@ class Species(models.Model):
 
     class Meta:
         db_table = "species"
-        verbose_name = "物种"
+        verbose_name = "病虫害类别"
         verbose_name_plural = verbose_name
         ordering = ["-record_count"]

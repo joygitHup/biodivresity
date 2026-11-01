@@ -455,26 +455,25 @@ def _mark_cross_species_conflicts(computed: list[dict]) -> None:
 
 
 def _sync_strong_alerts(computed: list[dict]) -> None:
-    """强证据自动预警：保护物种/入侵物种生成预警，按证据簇去重。"""
+    """强证据自动预警：高风险病虫害生成预警，按证据簇去重。"""
     if not _bool("fusion_auto_alert_enabled", True):
         return
     from apps.alerts.models import Alert
 
-    levels = {"national_1", "national_2", "provincial", "invasive"}
+    levels = {"high", "critical"}
     for item in computed:
         cluster: EvidenceCluster = item["cluster"]
         if item["conflict"] or cluster.fused_grade != EvidenceCluster.Grade.STRONG:
             continue
-        level = cluster.species.protection_level
+        level = cluster.species.severity
         if level not in levels:
             continue
         source_ref = f"fusion:{cluster.id}"
         if Alert.objects.filter(source=Alert.Source.FUSION, source_ref=source_ref).exists():
             continue
-        alert_type = (Alert.Type.INVASIVE_SPECIES if level == "invasive"
-                      else Alert.Type.PROTECTION_ANOMALY)
-        alert_level = (Alert.Level.CRITICAL if level in ("national_1", "invasive")
+        alert_level = (Alert.Level.CRITICAL if level == "critical"
                        else Alert.Level.WARNING)
+        alert_type = Alert.Type.PROTECTION_ANOMALY
         window = f"{timezone.localtime(cluster.window_start):%m-%d %H:%M} ~ " \
                  f"{timezone.localtime(cluster.window_end):%m-%d %H:%M}"
         Alert.objects.create(
@@ -614,7 +613,7 @@ def distribution_stats(days: int = 30) -> list[dict]:
             "speciesId": cluster.species_id,
             "speciesName": cluster.species.chinese_name,
             "speciesLatinName": cluster.species.latin_name,
-            "protectionLevel": cluster.species.protection_level,
+            "severityLevel": cluster.species.severity,
             "clusterCount": 0,
             "maxConfidence": 0.0,
             "modalities": set(),
@@ -653,10 +652,10 @@ def fusion_stats() -> dict:
         "audio": clusters.filter(has_audio=True).count(),
         "edna": clusters.filter(has_edna=True).count(),
     }
-    protected_levels = {"national_1", "national_2", "provincial"}
+    high_risk_levels = {"high", "critical"}
     pending_protected = clusters.filter(
         status=EvidenceCluster.Status.PENDING,
-        species__protection_level__in=protected_levels,
+        species__severity__in=high_risk_levels,
     ).count()
 
     edna_total = EdnaEvidence.objects.count()

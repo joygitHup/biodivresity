@@ -267,7 +267,7 @@ def _build_image_result(image_path: str) -> dict:
                 "species_id": entry.get("species_id"),
                 "chinese_name": entry.get("chinese_name", ""),
                 "latin_name": entry.get("latin_name", ""),
-                "protection_level": entry.get("protection_level", "none"),
+                "severity": entry.get("severity", "none"),
                 "confidence": confidence,
                 "count": 1,
                 "bbox": bbox,
@@ -458,7 +458,7 @@ def _build_audio_result(audio_path: str) -> dict:
             "confidence": round(float(prob), 4),
             "count": 1,
             "bbox": None,
-            "protection_level": entry.get("protection_level", "none"),
+            "severity": entry.get("severity", "none"),
         })
         if len(top_k) >= 5:
             break

@@ -97,7 +97,7 @@ class PredictionTask(models.Model):
 
     class EscalationReason(models.TextChoices):
         LOW_CONFIDENCE = "low_confidence", "边缘置信度不足"
-        PROTECTED_SPECIES = "protected_species", "保护物种强制上云"
+        HIGH_RISK = "high_risk", "高风险病虫害强制上云"
         AMBIGUOUS = "ambiguous", "候选歧义"
         LOW_QUALITY = "low_quality", "质量异常"
         EDGE_ERROR = "edge_error", "边缘推理异常"

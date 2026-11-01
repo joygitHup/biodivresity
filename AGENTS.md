@@ -35,7 +35,7 @@ src/
 │   ├── header.tsx          # 顶栏 (搜索+通知+用户)
 │   └── ui/                 # shadcn/ui 组件
 ├── lib/
-│   ├── mock-data.ts        # Mock 数据与类型定义
+│   ├── api.ts              # 后端 API 封装
 │   └── utils.ts            # 工具函数
 └── hooks/
     └── use-mobile.ts       # 移动端检测
@@ -55,6 +55,6 @@ src/
 - 侧边栏: 深色背景 oklch(0.2 0.04 155)
 - 详见 DESIGN.md
 
-## Mock 数据
+## 数据来源
 
-所有数据定义在 `src/lib/mock-data.ts`，包含类型定义和示例数据。替换为真实 API 时只需修改数据获取逻辑。
+所有数据均来自 Django 后端 API（`src/lib/api.ts` 统一封装），类别体系为作物-病虫害（PlantVillage 38 类），后端 seed 命令负责初始化演示数据。
